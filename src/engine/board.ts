@@ -2,17 +2,19 @@
  * Board topology for the two-grid solo ("golf") mode.
  *
  * Each grid is 4 columns × 5 rows with two opposite corners cut:
- * (col 3, row 0) and (col 0, row 4). That leaves 18 playable cells per grid,
- * in rows of 3-4-4-4-3.
+ * (col 0, row 0) top-left and (col 3, row 4) bottom-right, as visible in the
+ * original game's board. That leaves 18 playable cells per grid, in rows of
+ * 3-4-4-4-3.
  *
  * Hands: per grid, one hand per row (5) and one per column (4) = 9 hands;
  * grid 0 is the "front nine", grid 1 the "back nine" (18 hands total).
  * Structural hand lengths: rows {3,4,4,4,3}, columns {4,5,5,4}.
  *
- * NOTE: cell membership and hand ordering must be confirmed against
- * Engine.FinishLoadingCardHandList in the original source before the
- * canonical-board oracle is wired up. The mask below follows the exclusions
- * verified in Engine.Start; the row/column hand ordering here is provisional.
+ * Hand ordering is confirmed by the original game's scorecard: holes 1-5 are
+ * the five rows top-to-bottom (par 3,4,4,4,3), holes 6-9 the four columns
+ * left-to-right (par 4,5,5,4); grid 2 repeats this as holes 10-18. The cut
+ * corners match a completed-game screenshot; re-confirm the axis orientation
+ * against Engine.FinishLoadingCardHandList once the source is readable.
  *
  * This module knows nothing about players, turns, decks, or scoring — it only
  * describes cells and which cells form which hand.
@@ -32,11 +34,11 @@ export interface Cell {
   row: number; // 0..4
 }
 
-/** The two cut corners, from the exclusion mask in Engine.Start. */
+/** The two cut corners: top-left and bottom-right of each grid. */
 export function isPlayableCell(col: number, row: number): boolean {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return false;
-  if (col === 3 && row === 0) return false;
-  if (col === 0 && row === 4) return false;
+  if (col === 0 && row === 0) return false;
+  if (col === 3 && row === 4) return false;
   return true;
 }
 

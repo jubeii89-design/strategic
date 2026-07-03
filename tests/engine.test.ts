@@ -62,9 +62,9 @@ describe("deck", () => {
 });
 
 describe("board topology", () => {
-  it("cuts corners (3,0) and (0,4) leaving 18 cells per grid in rows 3-4-4-4-3", () => {
-    expect(isPlayableCell(3, 0)).toBe(false);
-    expect(isPlayableCell(0, 4)).toBe(false);
+  it("cuts corners (0,0) and (3,4) leaving 18 cells per grid in rows 3-4-4-4-3", () => {
+    expect(isPlayableCell(0, 0)).toBe(false);
+    expect(isPlayableCell(3, 4)).toBe(false);
     const cells = playableCells(0);
     expect(cells).toHaveLength(18);
     const rowCounts = [0, 1, 2, 3, 4].map(
@@ -78,6 +78,7 @@ describe("board topology", () => {
     expect(hands).toHaveLength(9);
     expect(allHands()).toHaveLength(18);
     const sizes = hands.map((h) => h.cells.length);
+    // Matches the original scorecard's PAR row: 3,4,4,4,3 | 4,5,5,4
     expect(sizes).toEqual([3, 4, 4, 4, 3, 4, 5, 5, 4]);
   });
 
@@ -85,7 +86,7 @@ describe("board topology", () => {
     const board = emptyBoard();
     placeCard(board, { grid: 0, col: 1, row: 1 }, 207);
     expect(() => placeCard(board, { grid: 0, col: 1, row: 1 }, 208)).toThrow();
-    expect(() => placeCard(board, { grid: 0, col: 3, row: 0 }, 208)).toThrow();
+    expect(() => placeCard(board, { grid: 0, col: 0, row: 0 }, 208)).toThrow();
   });
 });
 
