@@ -47,15 +47,20 @@ multi-player mode (human + AI on independent boards) needs no engine changes.
 | Pair | 5I = 5 | 4G = 7 | 3E = 9 |
 | Nothing | 5J = −5 | 4H = −4 | 3F = −3 |
 
-## Known data caveat
+## Canonical 286 board — hand-lock finding
 
-The task brief's canonical scorecard (front nine `3A,4B,4F,4G,3E,4H,4H,4C,3F` → 133,
-back nine → 153, round 286) cannot arise from any board state under the confirmed
-topology: its hand sizes don't fit any pattern of filled cells and the engine has no
-sub-hand extraction. It most likely contains a transcription slip. Its per-hand
-ID → points values all match the fixture table (which the engine reproduces exactly);
-the executable board-level oracle used instead is the fully-transcribed screenshot
-game in `tests/fixtures/screenshot-board.ts`.
+The task brief's canonical scorecard (front 133 / back 153 / round 286) is reproduced
+exactly by the engine (`tests/canonical-board.test.ts`), with one important mechanic
+uncovered along the way: the original game **locks each hand's score the moment the
+hand "completes" during play and never re-scores it**. In the canonical game the last
+three cards placed were 3♥,4♥,5♥ into the top row (completing hole 1) *after* columns
+7/8/9 had already locked their scores from the cards below — so the scorecard shows
+`4H,4C,3F` for those holes even though the final layout evaluates to `5J,5G,4H`
+(pure board-state scoring of the final layout gives 122/153/275; the locked subsets
+give the scorecard's 133/153/286). The lock-in trigger lives in
+`CardHand.CheckIfHandIsComplete` (not part of the supplied source) and is game-loop
+behaviour, deliberately outside the scorer — pure board-state scoring stays
+placement-order independent, as required for the future multi-player mode.
 
 ## Commands
 
