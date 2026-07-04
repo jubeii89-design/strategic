@@ -7,13 +7,21 @@
  *   10:3A/35 11:4H/-4 12:4F/22 13:4H/-4 14:3C/18 15:4C/28 16:5G/19 17:5H/16 18:4E/23 → 153
  *
  * KEY FINDING — why holes 7-9 don't match the final board: the original game
- * locks a hand's score at the moment it "completes" during play and never
- * re-scores it. In this game the last three cards placed were 3♥,4♥,5♥ into
- * row 0 (completing hole 1), AFTER columns 7/8/9 had already locked their
- * scores from the 4/4/3 cards below row 0. Board-state scoring of the final
- * layout therefore yields 5J/5G/4H for holes 7-9 (front 122, round 275),
- * while evaluating the locked card subsets reproduces the scorecard exactly.
- * The lock-in rule is game-loop behaviour (CardHand.CheckIfHandIsComplete),
+ * froze those three hands' scores before their last card arrived. In this
+ * game the last three cards placed were 3♥,4♥,5♥ into row 0 (completing
+ * hole 1), and columns 7/8/9 kept the scores of the 4/4/3 cards below row 0.
+ * Board-state scoring of the final layout therefore yields 5J/5G/4H for
+ * holes 7-9 (front 122, round 275), while evaluating the frozen card subsets
+ * reproduces the scorecard exactly.
+ *
+ * The freeze trigger is NOT fully explained by the available source:
+ * CardHand.CheckIfHandIsComplete (supplied separately) returns true only
+ * when every slot is filled — but it also sets
+ * handCompletedAnimationCompleted = true as a side effect, and once that
+ * flag is set the hand is never (re)scored by CheckForCompletedHands. The
+ * path that evaluated the 4/4/3-card subsets must live in the rest of
+ * CardHand (SetScore / animation state) or CardSlot (GetCard timing during
+ * the placement animation). Either way it is game-loop behaviour,
  * deliberately outside the scorer.
  */
 

@@ -51,16 +51,22 @@ multi-player mode (human + AI on independent boards) needs no engine changes.
 
 The task brief's canonical scorecard (front 133 / back 153 / round 286) is reproduced
 exactly by the engine (`tests/canonical-board.test.ts`), with one important mechanic
-uncovered along the way: the original game **locks each hand's score the moment the
-hand "completes" during play and never re-scores it**. In the canonical game the last
-three cards placed were 3♥,4♥,5♥ into the top row (completing hole 1) *after* columns
-7/8/9 had already locked their scores from the cards below — so the scorecard shows
-`4H,4C,3F` for those holes even though the final layout evaluates to `5J,5G,4H`
-(pure board-state scoring of the final layout gives 122/153/275; the locked subsets
-give the scorecard's 133/153/286). The lock-in trigger lives in
-`CardHand.CheckIfHandIsComplete` (not part of the supplied source) and is game-loop
-behaviour, deliberately outside the scorer — pure board-state scoring stays
-placement-order independent, as required for the future multi-player mode.
+uncovered along the way: the original game **froze three hands' scores before their
+last card arrived**. In the canonical game the last three cards placed were 3♥,4♥,5♥
+into the top row (completing hole 1), and columns 7/8/9 kept the scores of the cards
+below — the scorecard shows `4H,4C,3F` for those holes even though the final layout
+evaluates to `5J,5G,4H` (pure board-state scoring of the final layout gives
+122/153/275; the frozen 4/4/3-card subsets give the scorecard's 133/153/286).
+
+The freeze trigger is not fully explained by the available source:
+`CardHand.CheckIfHandIsComplete` returns true only when every slot is filled, but it
+also sets `handCompletedAnimationCompleted = true` **as a side effect of the check**,
+and a flagged hand is never (re)scored by `CheckForCompletedHands`. The path that
+evaluated the shortened subsets must live in the rest of `CardHand`
+(`SetScore`/animation state) or `CardSlot` (`GetCard` timing during the placement
+animation). Either way it is game-loop behaviour, deliberately outside the scorer —
+pure board-state scoring stays placement-order independent, as required for the
+future multi-player mode.
 
 ## Commands
 
