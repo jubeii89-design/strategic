@@ -11,11 +11,16 @@ import {
   LegacyScoringEngine,
 } from "./scoring-legacy.js";
 
+import { evaluateHandPure } from "./scoring.js";
+
 export { GameMode } from "./scoring-legacy.js";
 export type { HandScore } from "./scoring-legacy.js";
+export { evaluateHandPure } from "./scoring.js";
 export * from "./board.js";
 export * from "./cards.js";
 export * from "./deck.js";
+
+export type ScoringImpl = "pure" | "legacy";
 
 export interface HandResult extends HandScore {
   /** Hole number 1-18, scorecard order. */
@@ -32,11 +37,14 @@ export interface BoardScore {
 }
 
 /**
- * Evaluate one hand of 3-5 cards. Equivalent to the original's
- * draw-card-then-complete-hand sequence: per-card flags are reset, then
- * CalculateScoreForHand runs.
+ * Evaluate one hand of 3-5 cards with the legacy (statement-level ported)
+ * implementation. Equivalent to the original's draw-card-then-complete-hand
+ * sequence: per-card flags are reset, then CalculateScoreForHand runs.
  */
-export function evaluateHand(cardIds: readonly number[], gameMode: GameMode = GameMode.PokerStraightsMode): HandScore {
+export function evaluateHandLegacy(
+  cardIds: readonly number[],
+  gameMode: GameMode = GameMode.PokerStraightsMode,
+): HandScore {
   const engine = new LegacyScoringEngine(gameMode);
   engine.resetPerCardFlags();
   const cards = cardIds.map((id) => new CardWithScoringInfo(id));
@@ -48,12 +56,27 @@ export function evaluateHand(cardIds: readonly number[], gameMode: GameMode = Ga
 }
 
 /**
+ * Evaluate one hand of 3-5 cards. Defaults to the pure implementation, which
+ * the equivalence suite keeps in lockstep with the legacy port.
+ */
+export function evaluateHand(
+  cardIds: readonly number[],
+  gameMode: GameMode = GameMode.PokerStraightsMode,
+  impl: ScoringImpl = "pure",
+): HandScore {
+  return impl === "legacy" ? evaluateHandLegacy(cardIds, gameMode) : evaluateHandPure(cardIds, gameMode);
+}
+
+/**
  * Score a board. Incomplete hands (any empty cell) are reported with
  * complete: false and zero points, matching the original where a hand is only
  * scored once every slot is filled.
  */
-export function scoreBoard(board: BoardState, gameMode: GameMode = GameMode.PokerStraightsMode): BoardScore {
-  const engine = new LegacyScoringEngine(gameMode);
+export function scoreBoard(
+  board: BoardState,
+  gameMode: GameMode = GameMode.PokerStraightsMode,
+  impl: ScoringImpl = "pure",
+): BoardScore {
   const results: HandResult[] = [];
   allHands().forEach((hand, i) => {
     const ids = hand.cells.map((cell) => cardAt(board, cell));
@@ -70,12 +93,8 @@ export function scoreBoard(board: BoardState, gameMode: GameMode = GameMode.Poke
       });
       return;
     }
-    engine.resetPerCardFlags(); // the original resets these on each card draw
-    const score = engine.calculateScoreForHand(
-      (ids as number[]).map((id) => new CardWithScoringInfo(id)),
-      true,
-    );
-    results.push({ hole, hand, complete: true, ...score! });
+    const score = evaluateHand(ids as number[], gameMode, impl);
+    results.push({ hole, hand, complete: true, ...score });
   });
   const sum = (from: number, to: number) =>
     results.filter((r) => r.hole >= from && r.hole <= to && r.complete).reduce((t, r) => t + r.points, 0);

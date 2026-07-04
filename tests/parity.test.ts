@@ -118,15 +118,19 @@ describe("parity: handIDString and points vs the verified fixture (PokerStraight
     expect(Object.keys(HANDS).sort()).toEqual(Object.keys(HAND_POINTS).sort());
   });
 
-  for (const [id, hands] of Object.entries(HANDS)) {
-    describe(`${id} → ${HAND_POINTS[id]} points`, () => {
-      hands.forEach((cardIds, i) => {
-        it(`hand #${i + 1}: [${cardIds.join(",")}]`, () => {
-          const result = evaluateHand(cardIds, GameMode.PokerStraightsMode);
-          expect(result.handID).toBe(id);
-          expect(result.points).toBe(HAND_POINTS[id]);
+  for (const impl of ["legacy", "pure"] as const) {
+    describe(`implementation: ${impl}`, () => {
+      for (const [id, hands] of Object.entries(HANDS)) {
+        describe(`${id} → ${HAND_POINTS[id]} points`, () => {
+          hands.forEach((cardIds, i) => {
+            it(`hand #${i + 1}: [${cardIds.join(",")}]`, () => {
+              const result = evaluateHand(cardIds, GameMode.PokerStraightsMode, impl);
+              expect(result.handID).toBe(id);
+              expect(result.points).toBe(HAND_POINTS[id]);
+            });
+          });
         });
-      });
+      }
     });
   }
 });
@@ -146,11 +150,13 @@ describe("golf mode strokes (verified against the completed-game screenshot scor
     { cards: [S(3), H(3), C(3), S(9), H(9)], id: "5D", strokes: 4 }, // full house = Birdie
     { cards: [S(2), H(7), C(12)], id: "3F", strokes: 4 }, // 3-card bogey... Double per code
   ];
-  for (const { cards, id, strokes } of golfCases) {
-    it(`${id} scores ${strokes} strokes`, () => {
-      const result = evaluateHand(cards, GameMode.GolfMode);
-      expect(result.handID).toBe(id);
-      expect(result.points).toBe(strokes);
-    });
+  for (const impl of ["legacy", "pure"] as const) {
+    for (const { cards, id, strokes } of golfCases) {
+      it(`${impl}: ${id} scores ${strokes} strokes`, () => {
+        const result = evaluateHand(cards, GameMode.GolfMode, impl);
+        expect(result.handID).toBe(id);
+        expect(result.points).toBe(strokes);
+      });
+    }
   }
 });

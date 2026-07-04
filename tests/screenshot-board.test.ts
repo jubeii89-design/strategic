@@ -80,6 +80,17 @@ describe("screenshot board end-to-end (integration oracle)", () => {
     expect(result.round).toBe(SCREENSHOT_GOLF_TOTALS.round);
   });
 
+  it("legacy and pure implementations agree on the full board in both modes", () => {
+    for (const mode of [GameMode.PokerStraightsMode, GameMode.GolfMode]) {
+      const pure = scoreBoard(screenshotBoard(), mode, "pure");
+      const legacy = scoreBoard(screenshotBoard(), mode, "legacy");
+      expect(pure.hands.map((h) => `${h.hole}:${h.handID}=${h.points}`)).toEqual(
+        legacy.hands.map((h) => `${h.hole}:${h.handID}=${h.points}`),
+      );
+      expect(pure.round).toBe(legacy.round);
+    }
+  });
+
   it("scores partial boards without knowing about turns or players", () => {
     const board = screenshotBoard();
     board.cards[1]![2]![1] = null; // remove 2♣: back rows 12 & col 16 incomplete
