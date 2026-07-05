@@ -61,10 +61,17 @@ const bgOpacityIntro = await page.locator("#bg").evaluate((el) => getComputedSty
 assert(Number(bgOpacityIntro) > 0 && Number(bgOpacityIntro) < 1, `course dimmed on intro (opacity ${bgOpacityIntro})`);
 await page.screenshot({ path: `${OUT}/bg-intro.png` });
 
-// --- Golf mode shows the course full-strength ---
+// --- Opponent chooser (defaults to 3) ---
+assert(await page.locator(".opp-select .stepper").count() === 1, "opponent chooser present");
+assert(/3 AI opponents/.test(await page.locator(".opp-label").innerText()), "defaults to 3 opponents");
+await page.locator(".step-btn", { hasText: "+" }).click();
+assert(/4 AI opponents/.test(await page.locator(".opp-label").innerText()), "opponent count increments to 4");
+
+// --- Golf mode shows the course full-strength (with 4 opponents) ---
 await page.locator(".mode-btn:not(.primary)").click(); // Golf
 await page.waitForSelector(".board");
 assert(await page.getAttribute("body", "data-bg") === "golf", "golf sets body[data-bg=golf]");
+assert(await page.locator(".standings-list .standing-row").count() === 5, "golf standings shows you + 4 AI");
 await page.waitForTimeout(650); // let the opacity transition settle
 const golfOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
 assert(golfOpacity > 0.9, `course visible in golf mode (opacity ${golfOpacity})`);
@@ -79,13 +86,16 @@ await page.waitForTimeout(650);
 const pokerOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
 assert(pokerOpacity < 0.05, `course hidden in poker mode / felt shows (opacity ${pokerOpacity})`);
 assert(await page.locator(".grid").count() === 2, "two grids render");
+assert(await page.locator(".standings-list .standing-row").count() === 4, "poker standings shows you + 3 AI");
+assert(await page.locator(".standing-row.you").count() === 1, "human row highlighted in standings");
 const preplaced = await page.locator(".board .card:not(.card-empty)").count();
 assert(preplaced === 6, `6 cards auto-placed at start (got ${preplaced})`);
 assert(await page.locator(".pass-btn").isVisible(), "PASS button visible");
 const remainStart = await page.locator(".remain-value").innerText();
 assert(remainStart === "41", `cards remaining starts at 41 (got ${remainStart})`);
 
-// --- Place one card ---
+// --- Place one card; the human's counter ticks and AIs advance in lockstep ---
+const aiScoresBefore = await page.locator(".standings-list .standing-row:not(.you) .pts").allInnerTexts();
 await page.locator(".card-empty.placeable").first().click();
 await page.waitForTimeout(50);
 assert(await page.locator(".board .card:not(.card-empty)").count() === 7, "placing adds a card to the board");
@@ -107,10 +117,16 @@ while (guard++ < 60) {
 }
 assert(await page.locator(".overlay").count() > 0, "end panel appears when the round completes");
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
-const finalTxt = await page.locator(".end-panel .final").innerText();
-assert(/Final score:/.test(finalTxt), `final score shown: "${finalTxt}"`);
+
+// --- Final standings rank all 4 players ---
+const finalRows = await page.locator(".end-panel .standings.final .standing-row").count();
+assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
+const heading = await page.locator(".end-panel h2").innerText();
+assert(/win|placed/i.test(heading), `end heading reports placement: "${heading}"`);
+// the human's final-standings score matches the live scorecard ROUND total
 const roundCell = await page.locator(".scorecard .round").innerText();
-assert(roundCell === finalTxt.match(/-?\d+/)[0], `scorecard ROUND (${roundCell}) matches end panel`);
+const youPts = await page.locator(".end-panel .standings.final .standing-row.you .pts").innerText();
+assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
 
 assert(errors.length === 0, `no page/console errors (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);

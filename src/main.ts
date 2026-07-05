@@ -1,13 +1,15 @@
 /**
- * App entry: intro → game → end panel. Framework-free; re-renders the game
- * screen from the GameState snapshot after each action.
+ * App entry: intro → match → end panel. Framework-free; re-renders the game
+ * screen from the human player's GameState after each action, with AI
+ * opponents advancing in lockstep and a live standings panel.
  */
 
 import { type Cell, GameMode, scoreBoard } from "./engine/index.js";
-import { GameState } from "./game/gameState.js";
+import { Match } from "./game/match.js";
 import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
+import { renderStandings } from "./ui/standings.js";
 import { cardFace } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
 import "./ui/styles.css";
@@ -20,31 +22,35 @@ function clear(): void {
   app.replaceChildren();
 }
 
-function start(mode: GameMode): void {
-  const game = new GameState(mode);
-  renderGame(game);
+function start(mode: GameMode, opponents: number): void {
+  const match = new Match(mode, opponents);
+  renderGame(match);
 }
 
-function renderGame(game: GameState): void {
+function renderGame(match: Match): void {
   clear();
-  document.body.dataset.bg = game.mode === GameMode.GolfMode ? "golf" : "poker";
+  const game = match.human.state;
+  document.body.dataset.bg = match.mode === GameMode.GolfMode ? "golf" : "poker";
   const snap = game.snapshot();
-  const score = scoreBoard(snap.board, game.mode);
+  const score = scoreBoard(snap.board, match.mode);
 
   const screen = document.createElement("div");
   screen.className = "screen game";
 
-  screen.appendChild(renderScorecard(score, game.mode));
+  screen.appendChild(renderScorecard(score, match.mode));
 
   const main = document.createElement("div");
   main.className = "play-area";
 
-  // left rail: next card, PASS, cards remaining
+  // left rail: standings, next card, PASS, cards remaining
   const rail = document.createElement("aside");
   rail.className = "rail";
+
+  rail.appendChild(renderStandings(match.standings(), match.mode));
+
   const scoreBox = document.createElement("div");
   scoreBox.className = "score-box";
-  scoreBox.innerHTML = `<span class="score-box-label">${game.mode === GameMode.GolfMode ? "STROKES" : "SCORE"}</span><span class="score-box-value">${score.round}</span>`;
+  scoreBox.innerHTML = `<span class="score-box-label">${match.mode === GameMode.GolfMode ? "STROKES" : "SCORE"}</span><span class="score-box-value">${score.round}</span>`;
   rail.appendChild(scoreBox);
 
   const nextWrap = document.createElement("div");
@@ -64,8 +70,8 @@ function renderGame(game: GameState): void {
   passBtn.disabled = snap.isOver;
   passBtn.addEventListener("click", () => {
     if (!game.isOver) {
-      game.pass();
-      renderGame(game);
+      match.humanPass();
+      renderGame(match);
     }
   });
   rail.appendChild(passBtn);
@@ -77,8 +83,8 @@ function renderGame(game: GameState): void {
 
   const board = renderBoard(game, {
     onPlace: (cell: Cell) => {
-      game.place(cell);
-      renderGame(game);
+      match.humanPlace(cell);
+      renderGame(match);
     },
   });
 
@@ -86,18 +92,26 @@ function renderGame(game: GameState): void {
   screen.appendChild(main);
   app.appendChild(screen);
 
-  if (snap.isOver) showEndPanel(game, score.round);
+  if (match.isOver) showEndPanel(match);
 }
 
-function showEndPanel(game: GameState, roundTotal: number): void {
+function showEndPanel(match: Match): void {
   const overlay = document.createElement("div");
   overlay.className = "overlay";
   const panel = document.createElement("div");
   panel.className = "end-panel";
-  const label = game.mode === GameMode.GolfMode ? "Final strokes" : "Final score";
-  panel.innerHTML = `
-    <h2>Round complete</h2>
-    <p class="final">${label}: <strong>${roundTotal}</strong></p>`;
+
+  const rank = match.humanRank();
+  const total = match.ais.length + 1;
+  const won = rank === 1;
+  const heading = won ? "You win! 🏆" : `You placed ${ordinal(rank)} of ${total}`;
+
+  const h2 = document.createElement("h2");
+  h2.textContent = heading;
+  panel.appendChild(h2);
+
+  panel.appendChild(renderStandings(match.standings(), match.mode, { final: true }));
+
   const again = document.createElement("button");
   again.className = "mode-btn primary";
   again.innerHTML = `<span class="mode-label">Play Again</span>`;
@@ -109,6 +123,12 @@ function showEndPanel(game: GameState, roundTotal: number): void {
   panel.append(again, menu);
   overlay.appendChild(panel);
   app.appendChild(overlay);
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]!);
 }
 
 // keyboard: P = pass

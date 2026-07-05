@@ -88,7 +88,16 @@ body[data-bg="intro"] #bg::after {
 .wordmark .st8 { color: var(--gold); }
 .tagline { margin: 0.2rem 0 1.4rem; opacity: 0; animation: fade-in 900ms 550ms ease forwards; max-width: 34ch; }
 
-.mode-select { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; opacity: 0; animation: fade-in 900ms 700ms ease forwards; }
+/* opponent chooser */
+.opp-select { opacity: 0; animation: fade-in 900ms 640ms ease forwards; }
+.stepper { display: inline-flex; align-items: center; gap: 0.9rem; background: rgba(20,48,79,0.55); border: 2px solid var(--gold); border-radius: 999px; padding: 0.35rem 0.6rem; }
+.opp-label { min-width: 12ch; text-align: center; font-size: 0.95rem; }
+.opp-label b { color: var(--gold); font-size: 1.1rem; }
+.step-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--gold); color: var(--navy-deep); font-size: 1.3rem; font-weight: 900; cursor: pointer; line-height: 1; }
+.step-btn:disabled { opacity: 0.4; cursor: default; }
+.step-btn:not(:disabled):hover { filter: brightness(1.08); }
+
+.mode-select { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 0.9rem; opacity: 0; animation: fade-in 900ms 760ms ease forwards; }
 .mode-btn {
   display: flex; flex-direction: column; gap: 0.25rem;
   min-width: 220px; padding: 1rem 1.3rem;
@@ -115,7 +124,21 @@ body[data-bg="intro"] #bg::after {
 /* a soft translucent panel so the grids read cleanly over the course */
 body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow: 0 8px 30px rgba(0,0,0,0.4); backdrop-filter: blur(1.5px); }
 
-.rail { display: flex; flex-direction: column; gap: 0.7rem; align-items: center; min-width: 140px; }
+.rail { display: flex; flex-direction: column; gap: 0.7rem; align-items: center; min-width: 160px; }
+
+/* standings panel */
+.standings { width: 100%; background: rgba(20,48,79,0.82); border: 2px solid var(--gold); border-radius: 10px; padding: 0.5rem 0.6rem; }
+.standings-title { font-size: 0.64rem; letter-spacing: 0.12em; opacity: 0.85; text-align: center; margin-bottom: 0.35rem; text-transform: uppercase; }
+.standings-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.standing-row { display: grid; grid-template-columns: 1.8rem 1fr auto; align-items: center; gap: 0.4rem; padding: 2px 5px; border-radius: 5px; font-size: 0.82rem; }
+.standing-row .rank { text-align: center; opacity: 0.85; }
+.standing-row .pts { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.standing-row.you { background: rgba(200,162,74,0.18); }
+.standing-row.you .who { font-weight: 800; }
+.standing-row.playing .who::after { content: " •"; color: #7cc36f; }
+.standings-note { font-size: 0.58rem; opacity: 0.7; text-align: center; margin-top: 0.35rem; font-style: italic; }
+.standings.final { max-width: 320px; margin: 0.4rem auto 0.2rem; }
+.standings.final .standing-row { font-size: 0.95rem; padding: 4px 8px; }
 .rail-label { font-size: 0.62rem; letter-spacing: 0.12em; opacity: 0.75; display: block; text-align: center; }
 .score-box, .cards-remaining {
   background: var(--navy); border: 2px solid var(--gold); border-radius: 10px;
