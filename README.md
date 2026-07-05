@@ -1,7 +1,27 @@
-# PokerStraights Engine (TypeScript)
+# PokerSt8ts
 
-TypeScript port of the solo mode of the original Unity *PokerStraights* card game.
-Engine + parity tests only — no UI, no networking, no persistence.
+A **Strategic Titans** ([www.strategictitans.ca](https://www.strategictitans.ca)) web game — the
+solo mode of the original Unity *PokerStraights*, rebuilt in TypeScript. Place one card at a time
+across two grids to build 18 poker hands; play for **Poker Points** (high round) or **Golf**
+strokes (low round). The scoring engine is a verified statement-for-statement port of the
+decompiled `Engine.cs`.
+
+## Run it
+
+```sh
+npm install
+npm run dev        # play locally (Vite dev server)
+npm run build      # static bundle → dist/ (deployable to strategictitans.ca)
+npm run preview    # serve the built bundle
+npm test           # engine + game-state unit tests
+npm run typecheck
+```
+
+Playable slice: branded intro (`www.strategictitans.ca Presents → PokerSt8ts`) → mode select →
+two 4×5 grids with the original's cut corners, next-card rail, PASS button, cards-remaining
+counter, and a live 18-hole scorecard → round-complete panel. Cards and the crest render as
+CSS/SVG and **auto-swap to real PNGs** when dropped into `public/assets/` (see
+`public/assets/README.md`).
 
 ## Status
 
@@ -27,10 +47,17 @@ Engine + parity tests only — no UI, no networking, no persistence.
   exercised by the same suites as the pure implementation
 - `src/engine/scoring.ts` — phase-3 pure implementation (default)
 - `src/engine/index.ts` — public API: `evaluateHand(cards, mode)`, `scoreBoard(board, mode)`
-- `tests/` — parity fixture, screenshot-board oracle, equivalence suite
+- `src/game/gameState.ts` — solo game loop (deck draw, 6 auto-placed, place/pass, end detection);
+  no DOM, no player identity, so a future AI drives the same API on its own state
+- `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `intro`; `src/main.ts` wires
+  intro → game → end panel; `src/ui/styles.css`
+- `tests/` — parity fixture, screenshot-board oracle, equivalence suite, game-state tests
+- `scripts/smoke.mjs` — headless Chromium end-to-end check (`npm run smoke` against a running
+  `preview`)
 
-The engine scores any `BoardState` without knowing who placed the cards, so a future
-multi-player mode (human + AI on independent boards) needs no engine changes.
+The engine scores any `BoardState` without knowing who placed the cards, and the game-state layer
+imports only the engine (no UI), so a future multi-player mode (human + AI on independent boards)
+and a leaderboard attach without touching either.
 
 ## Hand ID reference (decoded from the original code)
 
