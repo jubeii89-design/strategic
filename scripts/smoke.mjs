@@ -54,9 +54,30 @@ assert(/PokerSt8ts/i.test(wordmark.replace(/\s/g, "")), `wordmark is PokerSt8ts:
 const link = await page.locator(".presents").getAttribute("href");
 assert(link === "https://www.strategictitans.ca", `site link is real: ${link}`);
 
-// --- Start a Poker Points game ---
+// --- Course background ---
+assert(await page.locator("#bg .course-svg").count() === 1, "course background SVG mounted");
+assert(await page.getAttribute("body", "data-bg") === "intro", "intro sets body[data-bg=intro]");
+const bgOpacityIntro = await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity);
+assert(Number(bgOpacityIntro) > 0 && Number(bgOpacityIntro) < 1, `course dimmed on intro (opacity ${bgOpacityIntro})`);
+await page.screenshot({ path: `${OUT}/bg-intro.png` });
+
+// --- Golf mode shows the course full-strength ---
+await page.locator(".mode-btn:not(.primary)").click(); // Golf
+await page.waitForSelector(".board");
+assert(await page.getAttribute("body", "data-bg") === "golf", "golf sets body[data-bg=golf]");
+await page.waitForTimeout(650); // let the opacity transition settle
+const golfOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
+assert(golfOpacity > 0.9, `course visible in golf mode (opacity ${golfOpacity})`);
+await page.screenshot({ path: `${OUT}/bg-golf.png` });
+
+// back to intro, then start a Poker Points game (course hidden, felt shows)
+await page.reload({ waitUntil: "networkidle" });
 await page.locator(".mode-btn.primary").click();
 await page.waitForSelector(".board");
+assert(await page.getAttribute("body", "data-bg") === "poker", "poker sets body[data-bg=poker]");
+await page.waitForTimeout(650);
+const pokerOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
+assert(pokerOpacity < 0.05, `course hidden in poker mode / felt shows (opacity ${pokerOpacity})`);
 assert(await page.locator(".grid").count() === 2, "two grids render");
 const preplaced = await page.locator(".board .card:not(.card-empty)").count();
 assert(preplaced === 6, `6 cards auto-placed at start (got ${preplaced})`);

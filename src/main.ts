@@ -9,9 +9,12 @@ import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
 import { cardFace } from "./ui/cards.js";
+import { mountCourseBackground } from "./ui/courseBackground.js";
 import "./ui/styles.css";
 
 const app = document.getElementById("app")!;
+const bg = document.getElementById("bg");
+if (bg) mountCourseBackground(bg);
 
 function clear(): void {
   app.replaceChildren();
@@ -24,6 +27,7 @@ function start(mode: GameMode): void {
 
 function renderGame(game: GameState): void {
   clear();
+  document.body.dataset.bg = game.mode === GameMode.GolfMode ? "golf" : "poker";
   const snap = game.snapshot();
   const score = scoreBoard(snap.board, game.mode);
 
@@ -117,6 +121,7 @@ document.addEventListener("keydown", (e) => {
 
 function showIntro(): void {
   clear();
+  document.body.dataset.bg = "intro";
   app.appendChild(renderIntro(start));
 }
 

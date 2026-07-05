@@ -25,3 +25,10 @@ Example: `public/assets/cards/Spades_A.png`, `public/assets/cards/Hearts_10.png`
 The four sprite sheets from the original game need to be sliced into these 52
 individual PNGs (portrait, transparent or card-coloured background). Until then
 the SVG cards are shown.
+
+## Course background (optional)
+
+`public/assets/course.jpg` (or `.png` / `.webp`) — a top-down golf-course
+image used as the Golf-mode / intro background. If present it replaces the
+built-in hand-drawn SVG course; if absent, the SVG is shown. A landscape image
+around 1600×900 or larger works best (it is cover-scaled).
