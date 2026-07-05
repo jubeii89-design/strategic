@@ -15,7 +15,8 @@ import { evaluateHandPure } from "./scoring.js";
 
 export { GameMode } from "./scoring-legacy.js";
 export type { HandScore } from "./scoring-legacy.js";
-export { evaluateHandPure } from "./scoring.js";
+export { evaluateHandPure, categoryValue, CATEGORIES } from "./scoring.js";
+export type { Category } from "./scoring.js";
 export * from "./board.js";
 export * from "./cards.js";
 export * from "./deck.js";

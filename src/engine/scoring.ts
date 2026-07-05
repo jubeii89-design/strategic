@@ -24,7 +24,7 @@
 
 import { GameMode, type HandScore } from "./scoring-legacy.js";
 
-type Category =
+export type Category =
   | "royal"
   | "sf"
   | "quads"
@@ -35,6 +35,11 @@ type Category =
   | "twoPair"
   | "pair"
   | "nothing";
+
+/** Every hand category, strongest → weakest (poker value order). */
+export const CATEGORIES: readonly Category[] = [
+  "royal", "sf", "quads", "fullHouse", "flush", "straight", "trips", "twoPair", "pair", "nothing",
+];
 
 type PerSize = Partial<Record<number, number>>;
 
@@ -63,6 +68,17 @@ const GOLF_STROKES: Record<Category, PerSize> = {
   pair: { 5: 6, 4: 5, 3: 3 },
   nothing: { 5: 7, 4: 6, 3: 4 },
 };
+
+/**
+ * The scored value of a hand category at a given size, in the given mode
+ * (poker points or golf strokes). Returns undefined when the category cannot
+ * occur at that size (e.g. a full house with 4 cards). Reuses the verified
+ * value tables so policy code never re-hardcodes the numbers.
+ */
+export function categoryValue(cat: Category, size: number, mode: GameMode): number | undefined {
+  const table = mode === GameMode.GolfMode ? GOLF_STROKES : POKER_POINTS;
+  return table[cat][size];
+}
 
 const HAND_IDS: Record<Category, Partial<Record<number, string>>> = {
   royal: { 5: "5A", 4: "4A", 3: "3A" },
