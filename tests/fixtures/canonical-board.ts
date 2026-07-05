@@ -14,18 +14,19 @@
  * holes 7-9 (front 122, round 275), while evaluating the frozen card subsets
  * reproduces the scorecard exactly.
  *
- * The freeze trigger is NOT fully explained by the available source:
- * CardHand.CheckIfHandIsComplete (supplied separately) returns true only
- * when every slot is filled — but it also sets
- * handCompletedAnimationCompleted = true as a side effect, and once that
- * flag is set the hand is never (re)scored by CheckForCompletedHands.
- * CardSlot.cs (also supplied) is ruled out: SetCard/GetCard are synchronous
- * with placement and CardSlot holds no completion or scoring logic. The
- * remaining candidates for the shortened 4/4/3-card evaluations are the
- * rest of CardHand.cs (SetScore / animation state / any per-placement
- * update) or a build difference between the screenshots' executable and the
- * decompiled assembly. Either way it is game-loop behaviour, deliberately
- * outside the scorer.
+ * RESOLUTION: with Engine.cs, CardSlot.cs and the complete CardHand.cs all
+ * inspected, the shortened 4/4/3-card evaluations are provably impossible
+ * in the decompiled assembly — CheckIfHandIsComplete requires every slot
+ * filled, SetCard/GetCard are synchronous with placement, CardHand has no
+ * provisional scoring, and CheckForCompletedHands always passes
+ * hand.Count cards to the scorer. This scorecard therefore came from an
+ * EARLIER BUILD of the game that could lock a hand's score before its last
+ * card arrived (the two screenshots even use different scoreboard layouts:
+ * HOLE/PAR/SCORE vs HAND/PAR/SCORE/HAND ID). Per-hand scoring parity is
+ * unaffected: every ID→points pair on both scorecards matches the engine.
+ * Note for the future game-loop: CheckIfHandIsComplete sets
+ * handCompletedAnimationCompleted = true as a side effect of the CHECK,
+ * so in the current build a hand is scored exactly once, when it fills.
  */
 
 import type { CardId } from "../../src/engine/cards.js";

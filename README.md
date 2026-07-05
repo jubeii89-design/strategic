@@ -58,15 +58,20 @@ below — the scorecard shows `4H,4C,3F` for those holes even though the final l
 evaluates to `5J,5G,4H` (pure board-state scoring of the final layout gives
 122/153/275; the frozen 4/4/3-card subsets give the scorecard's 133/153/286).
 
-The freeze trigger is not fully explained by the available source:
-`CardHand.CheckIfHandIsComplete` returns true only when every slot is filled, but it
-also sets `handCompletedAnimationCompleted = true` **as a side effect of the check**,
-and a flagged hand is never (re)scored by `CheckForCompletedHands`. The path that
-evaluated the shortened subsets must live in the rest of `CardHand`
-(`SetScore`/animation state) or `CardSlot` (`GetCard` timing during the placement
-animation). Either way it is game-loop behaviour, deliberately outside the scorer —
-pure board-state scoring stays placement-order independent, as required for the
-future multi-player mode.
+With `Engine.cs`, `CardSlot.cs`, and the complete `CardHand.cs` all inspected, the
+freeze is provably impossible in the decompiled assembly: `CheckIfHandIsComplete`
+requires every slot filled, `SetCard`/`GetCard` are synchronous with placement,
+`CardHand` has no provisional scoring, and `CheckForCompletedHands` always passes
+`hand.Count` cards to the scorer. The 286 scorecard therefore came from an **earlier
+build** of the game that could lock a hand's score before its last card arrived (the
+two reference screenshots even use different scoreboard layouts). Per-hand scoring
+parity is unaffected — every ID→points pair on both scorecards matches the engine.
+
+Rule for the future game-loop, per the current assembly: `CheckIfHandIsComplete`
+sets `handCompletedAnimationCompleted = true` **as a side effect of the check**, so a
+hand is scored exactly once, at the moment its last cell fills. Pure board-state
+scoring stays placement-order independent, as required for the future multi-player
+mode.
 
 ## Commands
 
