@@ -18,11 +18,14 @@
  * CardHand.CheckIfHandIsComplete (supplied separately) returns true only
  * when every slot is filled — but it also sets
  * handCompletedAnimationCompleted = true as a side effect, and once that
- * flag is set the hand is never (re)scored by CheckForCompletedHands. The
- * path that evaluated the 4/4/3-card subsets must live in the rest of
- * CardHand (SetScore / animation state) or CardSlot (GetCard timing during
- * the placement animation). Either way it is game-loop behaviour,
- * deliberately outside the scorer.
+ * flag is set the hand is never (re)scored by CheckForCompletedHands.
+ * CardSlot.cs (also supplied) is ruled out: SetCard/GetCard are synchronous
+ * with placement and CardSlot holds no completion or scoring logic. The
+ * remaining candidates for the shortened 4/4/3-card evaluations are the
+ * rest of CardHand.cs (SetScore / animation state / any per-placement
+ * update) or a build difference between the screenshots' executable and the
+ * decompiled assembly. Either way it is game-loop behaviour, deliberately
+ * outside the scorer.
  */
 
 import type { CardId } from "../../src/engine/cards.js";
