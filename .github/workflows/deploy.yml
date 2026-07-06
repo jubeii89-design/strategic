@@ -43,12 +43,13 @@ jobs:
         with:
           path: dist
 
-  # Deploys from main (production) or the port branch (to publish before the PR
-  # is merged), or a manual run. After merging PR #1, the branch clause can be
-  # dropped so only main deploys.
+  # Deploy from main only. GitHub's github-pages environment allows deployments
+  # from the default branch by default, so publishing happens when PR #1 is
+  # merged to main. (To deploy a non-default branch instead, allow it under
+  # Settings → Environments → github-pages → Deployment branches.)
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/pokersstraights-solo-port-mf2g4u' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
