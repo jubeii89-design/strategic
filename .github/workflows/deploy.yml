@@ -33,19 +33,22 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # Creates/enables the Pages site (source = GitHub Actions) via the API,
+      # so no manual Settings → Pages toggle is needed on the public repo.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  # Deploy only from main (production) or a manual run. Branch pushes still run
-  # the build job above to validate; they don't attempt a Pages deployment, so
-  # the PR isn't marked failed while Pages is being enabled. To publish before
-  # merging: enable Pages, then Actions → "Deploy PokerSt8ts to GitHub Pages" →
-  # Run workflow → pick this branch.
+  # Deploys from main (production) or the port branch (to publish before the PR
+  # is merged), or a manual run. After merging PR #1, the branch clause can be
+  # dropped so only main deploys.
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/pokersstraights-solo-port-mf2g4u' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
