@@ -1,0 +1,59 @@
+name: Deploy PokerSt8ts to GitHub Pages
+
+# Builds the static Vite app and publishes dist/ to GitHub Pages.
+# Runs on pushes to main (production) and on the initial port branch so the
+# site can go live before the PR is merged; also runnable on demand.
+on:
+  push:
+    branches:
+      - main
+      - claude/pokersstraights-solo-port-mf2g4u
+  workflow_dispatch:
+
+# Permissions the Pages deploy action needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One in-flight deployment at a time; newer pushes supersede older runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Creates/enables the Pages site (source = GitHub Actions) via the API,
+      # so no manual Settings → Pages toggle is needed on the public repo.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # Deploy from main only. GitHub's github-pages environment allows deployments
+  # from the default branch by default, so publishing happens when PR #1 is
+  # merged to main. (To deploy a non-default branch instead, allow it under
+  # Settings → Environments → github-pages → Deployment branches.)
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
