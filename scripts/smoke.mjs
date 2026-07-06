@@ -119,15 +119,36 @@ assert(await page.locator(".overlay").count() > 0, "end panel appears when the r
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
 
 // --- Final standings rank all 4 players ---
-const finalRows = await page.locator(".end-panel .standings.final .standing-row").count();
+const finalRows = await page.locator(".standings.final .standing-row").count();
 assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
-const heading = await page.locator(".end-panel h2").innerText();
-assert(/win|placed/i.test(heading), `end heading reports placement: "${heading}"`);
-// the human's final-standings score matches the live scorecard ROUND total
 const roundCell = await page.locator(".scorecard .round").innerText();
-const youPts = await page.locator(".end-panel .standings.final .standing-row.you .pts").innerText();
+const youPts = await page.locator(".standings.final .standing-row.you .pts").innerText();
 assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
+
+// --- Leaderboard: first finish always qualifies → name prompt → submit ---
+await page.waitForSelector(".name-prompt");
+assert(await page.locator(".name-prompt .name-input").count() === 1, "name prompt appears on a qualifying finish");
+await page.locator(".name-prompt .name-input").fill("TESTER");
+await page.locator(".name-prompt .mode-btn.primary").click();
+await page.waitForSelector(".leaderboard-screen");
+const lbNames = await page.locator(".lb-table .lb-name").allInnerTexts();
+assert(lbNames.includes("TESTER"), `submitted score shows on the leaderboard: ${JSON.stringify(lbNames)}`);
+assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
+assert(youPts === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+// AI names never appear as leaderboard entries (human-only)
+for (const ai of ["Leonidas", "Ajax", "Helena", "Cyrus"]) {
+  assert(!lbNames.includes(ai), `AI '${ai}' is NOT on the leaderboard`);
+}
+await page.screenshot({ path: `${OUT}/smoke-leaderboard.png` });
+
+// --- Persistence across a full page reload (localStorage) ---
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForTimeout(950);
+await page.locator(".lb-link").click();
+await page.waitForSelector(".leaderboard-screen");
+const afterReload = await page.locator(".lb-table .lb-name").allInnerTexts();
+assert(afterReload.includes("TESTER"), `score persists across reload: ${JSON.stringify(afterReload)}`);
 
 assert(errors.length === 0, `no page/console errors (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);
 

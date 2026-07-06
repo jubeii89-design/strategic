@@ -30,7 +30,10 @@ function crest(): HTMLElement {
   return el;
 }
 
-export function renderIntro(onStart: (mode: GameMode, opponents: number) => void): HTMLElement {
+export function renderIntro(
+  onStart: (mode: GameMode, opponents: number) => void,
+  onLeaderboard?: () => void,
+): HTMLElement {
   const screen = document.createElement("div");
   screen.className = "screen intro";
 
@@ -92,5 +95,13 @@ export function renderIntro(onStart: (mode: GameMode, opponents: number) => void
   modes.appendChild(makeBtn("Golf", "Par & strokes — chase a low round.", GameMode.GolfMode));
 
   screen.append(presents, crest(), wordmark, tagline, oppWrap, modes);
+
+  if (onLeaderboard) {
+    const lbBtn = document.createElement("button");
+    lbBtn.className = "lb-link";
+    lbBtn.innerHTML = "🏆 Leaderboard";
+    lbBtn.addEventListener("click", () => onLeaderboard());
+    screen.appendChild(lbBtn);
+  }
   return screen;
 }

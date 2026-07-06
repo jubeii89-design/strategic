@@ -48,16 +48,31 @@ CSS/SVG and **auto-swap to real PNGs** when dropped into `public/assets/` (see
 - `src/engine/scoring.ts` — phase-3 pure implementation (default)
 - `src/engine/index.ts` — public API: `evaluateHand(cards, mode)`, `scoreBoard(board, mode)`
 - `src/game/gameState.ts` — solo game loop (deck draw, 6 auto-placed, place/pass, end detection);
-  no DOM, no player identity, so a future AI drives the same API on its own state
-- `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `intro`; `src/main.ts` wires
-  intro → game → end panel; `src/ui/styles.css`
+  no DOM, no player identity, so the AI drives the same API on its own state
+- `src/game/ai.ts` — greedy AI placement/pass policy; `src/game/match.ts` — human + 1–8 AI in
+  lockstep, session-only AI scores
+- `src/game/leaderboard.ts` — persistent, human-only leaderboard behind a `LeaderboardStore`
+  interface (`localStorage` now, `RemoteLeaderboardStore` seam for a shared DB later)
+- `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `standings`, `intro`,
+  `leaderboard`, `courseBackground`; `src/main.ts` wires intro → match → end panel → leaderboard;
+  `src/ui/styles.css`
 - `tests/` — parity fixture, screenshot-board oracle, equivalence suite, game-state tests
 - `scripts/smoke.mjs` — headless Chromium end-to-end check (`npm run smoke` against a running
   `preview`)
 
 The engine scores any `BoardState` without knowing who placed the cards, and the game-state layer
-imports only the engine (no UI), so a future multi-player mode (human + AI on independent boards)
-and a leaderboard attach without touching either.
+imports only the engine (no UI), so the multi-player mode (human + 1–8 AI on independent boards)
+and the leaderboard attach without touching either.
+
+## Leaderboard
+
+Persistent and **human-only** — AI scores are session-only and never written, an invariant that is
+structural (`src/game/leaderboard.ts` has no concept of an AI, and `main.ts` only ever submits the
+human's round). Separate top-20 boards for Poker Points (high) and Golf (low). Storage sits behind
+an async `LeaderboardStore`: `LocalLeaderboardStore` (per-browser `localStorage`, ships with the
+static build) today, with a documented `RemoteLeaderboardStore` seam so a shared hosted database
+drops in later with zero UI rework. A qualifying finish prompts for a name (remembered) and shows
+the ranked board with the new entry highlighted.
 
 ## Hand ID reference (decoded from the original code)
 

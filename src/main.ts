@@ -6,10 +6,12 @@
 
 import { type Cell, GameMode, scoreBoard } from "./engine/index.js";
 import { Match } from "./game/match.js";
+import { Leaderboard, LocalLeaderboardStore, cleanName, todayISO } from "./game/leaderboard.js";
 import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
 import { renderStandings } from "./ui/standings.js";
+import { renderLeaderboardScreen, promptForName } from "./ui/leaderboard.js";
 import { cardFace } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
 import "./ui/styles.css";
@@ -17,6 +19,8 @@ import "./ui/styles.css";
 const app = document.getElementById("app")!;
 const bg = document.getElementById("bg");
 if (bg) mountCourseBackground(bg);
+
+const leaderboard = new Leaderboard(new LocalLeaderboardStore());
 
 function clear(): void {
   app.replaceChildren();
@@ -120,9 +124,33 @@ function showEndPanel(match: Match): void {
   menu.className = "mode-btn";
   menu.innerHTML = `<span class="mode-label">Main Menu</span>`;
   menu.addEventListener("click", showIntro);
-  panel.append(again, menu);
+  const board = document.createElement("button");
+  board.className = "mode-btn";
+  board.innerHTML = `<span class="mode-label">Leaderboard</span>`;
+  board.addEventListener("click", () => showLeaderboard(match.mode));
+  panel.append(again, menu, board);
   overlay.appendChild(panel);
   app.appendChild(overlay);
+
+  // Submit ONLY the human's score to the persistent, human-only leaderboard.
+  void maybeSubmitHumanScore(match, overlay);
+}
+
+async function maybeSubmitHumanScore(match: Match, overlay: HTMLElement): Promise<void> {
+  const humanScore = scoreBoard(match.human.state.snapshot().board, match.mode).round;
+  if (!(await leaderboard.wouldQualify(humanScore, match.mode))) return;
+  const name = await promptForName(match.humanRank());
+  if (name === null) return; // player skipped
+  const entry = { name: cleanName(name), score: humanScore, mode: match.mode, date: todayISO() };
+  const result = await leaderboard.submit(entry);
+  if (!overlay.isConnected) return; // player already navigated away
+  if (result.qualified) showLeaderboardWith(match.mode, entry);
+}
+
+function showLeaderboardWith(mode: GameMode, highlight: Parameters<typeof renderLeaderboardScreen>[0]["highlight"]): void {
+  clear();
+  document.body.dataset.bg = "intro";
+  app.appendChild(renderLeaderboardScreen({ leaderboard, mode, highlight, onBack: showIntro }));
 }
 
 function ordinal(n: number): string {
@@ -142,7 +170,13 @@ document.addEventListener("keydown", (e) => {
 function showIntro(): void {
   clear();
   document.body.dataset.bg = "intro";
-  app.appendChild(renderIntro(start));
+  app.appendChild(renderIntro(start, showLeaderboard));
+}
+
+function showLeaderboard(mode: GameMode = GameMode.PokerStraightsMode): void {
+  clear();
+  document.body.dataset.bg = "intro";
+  app.appendChild(renderLeaderboardScreen({ leaderboard, mode, onBack: showIntro }));
 }
 
 showIntro();
