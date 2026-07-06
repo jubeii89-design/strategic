@@ -38,8 +38,14 @@ jobs:
         with:
           path: dist
 
+  # Deploy only from main (production) or a manual run. Branch pushes still run
+  # the build job above to validate; they don't attempt a Pages deployment, so
+  # the PR isn't marked failed while Pages is being enabled. To publish before
+  # merging: enable Pages, then Actions → "Deploy PokerSt8ts to GitHub Pages" →
+  # Run workflow → pick this branch.
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

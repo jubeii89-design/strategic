@@ -10,14 +10,16 @@ Pages. `vite.config.ts` sets `base: "./"` so the build works at a domain root
 One-time setup (repo admin, ~1 minute):
 
 1. **Enable Pages**: repo **Settings → Pages → Build and deployment → Source:
-   GitHub Actions**.
-2. The workflow already runs on pushes to `main` and to the port branch. Once
-   Pages is enabled, the next run deploys and prints the live URL in the
-   workflow summary (also shown under the repo's **Environments → github-pages**).
-   Default URL: `https://jubeii89-design.github.io/strategic/`.
-3. To make `main` the production source, merge PR #1; every push to `main`
-   redeploys. (You can drop the port-branch trigger from the workflow after
-   merging if you want main-only deploys.)
+   GitHub Actions**. (Until this is done, the deploy step 404s — the build/test
+   job still runs and validates every push.)
+2. **Deploy.** The `build` job runs on every push (validates typecheck + tests +
+   build). The `deploy` job runs only from `main` or a manual run, so branch
+   pushes don't fail while Pages is being set up. Two ways to publish:
+   - **Merge PR #1 to `main`** → every push to `main` builds and deploys.
+   - **Publish before merging**: after enabling Pages, go to **Actions →
+     "Deploy PokerSt8ts to GitHub Pages" → Run workflow** and pick this branch.
+   Either way the live URL prints in the run summary and under **Environments →
+   github-pages**. Default: `https://jubeii89-design.github.io/strategic/`.
 
 The workflow gates the deploy on `typecheck`, `test`, and `build`, so a broken
 commit never ships.
