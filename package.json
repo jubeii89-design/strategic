@@ -1,13 +1,14 @@
 {
-  "name": "pokerstraights-engine",
-  "version": "0.1.0",
+  "name": "pokerst8ts",
+  "version": "1.0.0",
   "private": true,
-  "description": "TypeScript port of the solo PokerStraights scoring engine",
+  "description": "PokerSt8ts — a solo card/board game by Strategic Titans",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "package": "vite build && cd dist && zip -r ../pokerst8ts-v1.0.0.zip . && cd .. && echo 'Packaged: pokerst8ts-v1.0.0.zip'",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs"
