@@ -14,11 +14,14 @@ import { renderStandings } from "./ui/standings.js";
 import { renderLeaderboardScreen, promptForName } from "./ui/leaderboard.js";
 import { cardFace } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
+import { mountPokerTableBackground } from "./ui/pokerTableBackground.js";
 import "./ui/styles.css";
 
 const app = document.getElementById("app")!;
 const bg = document.getElementById("bg");
+const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
+if (bgPoker) mountPokerTableBackground(bgPoker);
 
 const leaderboard = new Leaderboard(new LocalLeaderboardStore());
 

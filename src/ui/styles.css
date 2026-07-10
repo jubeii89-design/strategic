@@ -29,19 +29,24 @@ body {
 
 #app { min-height: 100vh; position: relative; z-index: 1; }
 
-/* ---------- Course background layer ---------- */
-#bg {
+/* ---------- Background layers ---------- */
+#bg, #bg-poker {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   opacity: 0; transition: opacity 500ms ease;
   background-size: cover; background-position: center;
 }
 #bg .course-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-#bg.has-course-img .course-svg { display: none; } /* raster override wins */
-/* golf shows the course; intro shows it dimmed; poker keeps the felt */
+#bg-poker .table-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#bg.has-course-img .course-svg { display: none; }
+#bg-poker.has-poker-img .table-svg { display: none; }
+/* golf: course full; intro: course dimmed; poker: poker table */
 body[data-bg="golf"] #bg { opacity: 1; }
+body[data-bg="golf"] #bg-poker { opacity: 0; }
 body[data-bg="intro"] #bg { opacity: 0.85; }
+body[data-bg="intro"] #bg-poker { opacity: 0; }
 body[data-bg="poker"] #bg { opacity: 0; }
-/* light vignette so foreground text/cards stay crisp without hiding the course */
+body[data-bg="poker"] #bg-poker { opacity: 1; }
+/* vignettes for card/text readability */
 body[data-bg="golf"] #bg::after {
   content: ""; position: absolute; inset: 0;
   background: radial-gradient(circle at 50% 42%, rgba(12,34,20,0) 30%, rgba(12,34,20,0.42) 100%);
@@ -49,6 +54,10 @@ body[data-bg="golf"] #bg::after {
 body[data-bg="intro"] #bg::after {
   content: ""; position: absolute; inset: 0;
   background: radial-gradient(circle at 50% 40%, rgba(10,28,18,0.35) 0%, rgba(10,28,18,0.66) 100%);
+}
+body[data-bg="poker"] #bg-poker::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 42%, rgba(10,20,12,0) 40%, rgba(10,20,12,0.3) 100%);
 }
 
 .screen { min-height: 100vh; display: flex; flex-direction: column; }
