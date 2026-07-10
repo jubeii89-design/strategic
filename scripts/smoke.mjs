@@ -82,7 +82,7 @@ await page.reload({ waitUntil: "networkidle" });
 await page.locator(".mode-btn.primary").click();
 await page.waitForSelector(".board");
 assert(await page.getAttribute("body", "data-bg") === "poker", "poker sets body[data-bg=poker]");
-await page.waitForTimeout(650);
+await page.waitForTimeout(850);
 const pokerOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
 assert(pokerOpacity < 0.05, `course hidden in poker mode / felt shows (opacity ${pokerOpacity})`);
 assert(await page.locator(".grid").count() === 2, "two grids render");
