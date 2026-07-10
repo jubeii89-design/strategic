@@ -6,8 +6,10 @@ falls back to the built-in rendering, so nothing ever breaks.
 
 ## Logo
 
-`public/assets/logo.png` — the Strategic Titans crest, shown on the intro
-screen (square works best; it is masked to a circle). PNG or SVG.
+`public/assets/logo.png` (or `logo.jpg`) — the Strategic Titans crest, shown on
+the intro screen (square works best; it is masked to a circle). The real crest is
+checked in as `logo.png`. To replace it, overwrite the file via GitHub web upload
+or push a new image. A built-in SVG fallback is shown if the file is missing.
 
 ## Cards
 
