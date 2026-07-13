@@ -43,9 +43,28 @@ page.on("console", (m) => {
   errors.push(t);
 });
 
+// --- Portal (marketing landing page) ---
 await page.goto(BASE, { waitUntil: "networkidle" });
+const portalPresents = await page.locator(".presents").innerText();
+assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
+const portalWordmark = await page.locator(".wordmark").innerText();
+assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
+assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
+// The repo ships a real public/assets/logo.png — assert it actually loaded via
+// the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
+// the check that would catch an asset-path regression; the generic no-console-
+// errors assertion below intentionally ignores art-probe 404s and would miss it.
+await page.waitForSelector(".crest-img", { timeout: 3000 });
+assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+const enterHref = await page.locator(".enter-btn").getAttribute("href");
+assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
+await page.screenshot({ path: `${OUT}/smoke-portal.png` });
 
-// --- Intro screen ---
+await page.locator(".enter-btn").click();
+await page.waitForURL(/\/play\/?$/, { waitUntil: "networkidle" });
+assert(/\/play\/?$/.test(page.url()), `navigated to /play/: ${page.url()}`);
+
+// --- Intro screen (game, now at /play/) ---
 const presents = await page.locator(".presents").innerText();
 assert(/strategictitans\.ca/i.test(presents), `intro shows the site: "${presents.replace(/\n/g, " ")}"`);
 assert(/presents/i.test(presents), "intro says Presents");
@@ -53,12 +72,19 @@ const wordmark = await page.locator(".wordmark").innerText();
 assert(/PokerSt8ts/i.test(wordmark.replace(/\s/g, "")), `wordmark is PokerSt8ts: "${wordmark}"`);
 const link = await page.locator(".presents").getAttribute("href");
 assert(link === "https://www.strategictitans.ca", `site link is real: ${link}`);
+await page.waitForSelector(".crest-img", { timeout: 3000 });
+assert(await page.locator(".crest-img").count() === 1, "game crest loads the real logo.png (../ asset path resolves under /play/)");
+const homeHref = await page.locator(".home-link").getAttribute("href");
+assert(homeHref === "../", `game intro links back to the portal: ${homeHref}`);
 
-// --- Course background ---
+// --- Course & poker table backgrounds ---
 assert(await page.locator("#bg .course-svg").count() === 1, "course background SVG mounted");
+assert(await page.locator("#bg-poker .table-svg").count() === 1, "poker table SVG mounted");
 assert(await page.getAttribute("body", "data-bg") === "intro", "intro sets body[data-bg=intro]");
 const bgOpacityIntro = await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity);
 assert(Number(bgOpacityIntro) > 0 && Number(bgOpacityIntro) < 1, `course dimmed on intro (opacity ${bgOpacityIntro})`);
+const pokerBgIntro = Number(await page.locator("#bg-poker").evaluate((el) => getComputedStyle(el).opacity));
+assert(pokerBgIntro < 0.05, `poker table hidden on intro (opacity ${pokerBgIntro})`);
 await page.screenshot({ path: `${OUT}/bg-intro.png` });
 
 // --- Opponent chooser (defaults to 3) ---
@@ -72,9 +98,11 @@ await page.locator(".mode-btn:not(.primary)").click(); // Golf
 await page.waitForSelector(".board");
 assert(await page.getAttribute("body", "data-bg") === "golf", "golf sets body[data-bg=golf]");
 assert(await page.locator(".standings-list .standing-row").count() === 5, "golf standings shows you + 4 AI");
-await page.waitForTimeout(650); // let the opacity transition settle
+await page.waitForTimeout(1200); // let the opacity transition settle
 const golfOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
 assert(golfOpacity > 0.9, `course visible in golf mode (opacity ${golfOpacity})`);
+const pokerBgGolf = Number(await page.locator("#bg-poker").evaluate((el) => getComputedStyle(el).opacity));
+assert(pokerBgGolf < 0.05, `poker table hidden in golf mode (opacity ${pokerBgGolf})`);
 await page.screenshot({ path: `${OUT}/bg-golf.png` });
 
 // back to intro, then start a Poker Points game (course hidden, felt shows)
@@ -82,9 +110,11 @@ await page.reload({ waitUntil: "networkidle" });
 await page.locator(".mode-btn.primary").click();
 await page.waitForSelector(".board");
 assert(await page.getAttribute("body", "data-bg") === "poker", "poker sets body[data-bg=poker]");
-await page.waitForTimeout(650);
+await page.waitForTimeout(1200);
 const pokerOpacity = Number(await page.locator("#bg").evaluate((el) => getComputedStyle(el).opacity));
-assert(pokerOpacity < 0.05, `course hidden in poker mode / felt shows (opacity ${pokerOpacity})`);
+assert(pokerOpacity < 0.05, `course hidden in poker mode (opacity ${pokerOpacity})`);
+const pokerTableOpacity = Number(await page.locator("#bg-poker").evaluate((el) => getComputedStyle(el).opacity));
+assert(pokerTableOpacity > 0.9, `poker table visible in poker mode (opacity ${pokerTableOpacity})`);
 assert(await page.locator(".grid").count() === 2, "two grids render");
 assert(await page.locator(".standings-list .standing-row").count() === 4, "poker standings shows you + 3 AI");
 assert(await page.locator(".standing-row.you").count() === 1, "human row highlighted in standings");

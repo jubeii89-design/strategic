@@ -2,12 +2,16 @@
 
 The game renders crisp CSS/SVG cards and a typographic intro out of the box.
 Drop real art here and it is picked up automatically — a missing file always
-falls back to the built-in rendering, so nothing ever breaks.
+falls back to the built-in rendering, so nothing ever breaks. This directory
+is shared by both site pages — the marketing portal at `/` and the game at
+`/play/` — so an image dropped in here shows up on both.
 
 ## Logo
 
-`public/assets/logo.png` — the Strategic Titans crest, shown on the intro
-screen (square works best; it is masked to a circle). PNG or SVG.
+`public/assets/logo.png` (or `logo.jpg`) — the Strategic Titans crest, shown on
+the intro screen (square works best; it is masked to a circle). The real crest is
+checked in as `logo.png`. To replace it, overwrite the file via GitHub web upload
+or push a new image. A built-in SVG fallback is shown if the file is missing.
 
 ## Cards
 
@@ -32,3 +36,10 @@ the SVG cards are shown.
 image used as the Golf-mode / intro background. If present it replaces the
 built-in hand-drawn SVG course; if absent, the SVG is shown. A landscape image
 around 1600×900 or larger works best (it is cover-scaled).
+
+## Poker table background (optional)
+
+`public/assets/poker-table.jpg` (or `.png` / `.webp`) — a top-down casino
+poker table image used as the Poker Points mode background. If present it
+replaces the built-in SVG poker table; if absent, the SVG is shown. A landscape
+image around 1600×900 or larger works best (it is cover-scaled).

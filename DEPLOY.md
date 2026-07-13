@@ -1,9 +1,11 @@
 # Deploying PokerSt8ts
 
-The game is a static site (Vite → `dist/`). It ships with a GitHub Actions
-workflow (`.github/workflows/deploy.yml`) that builds and publishes to GitHub
-Pages. `vite.config.ts` sets `base: "./"` so the build works at a domain root
-**or** a project subpath without changes.
+The site is a static Vite multi-page build (`dist/`) with two routes: **`/`**
+is the marketing portal (branding, tagline, gold ENTER button) and **`/play/`**
+is the actual game — one `vite build` emits both, sharing the same bundled
+assets. It ships with a GitHub Actions workflow (`.github/workflows/deploy.yml`)
+that builds and publishes to GitHub Pages. `vite.config.ts` sets `base: "./"`
+so the build works at a domain root **or** a project subpath without changes.
 
 ## GitHub Pages (recommended — free, in-repo)
 
