@@ -1,5 +1,5 @@
 /**
- * Top-down casino poker table background for Poker Points mode.
+ * Top-down casino poker table background for PokerStr8ts mode.
  * Pure inline SVG — self-contained, no external assets.
  * A raster override at public/assets/poker-table.(jpg|png|webp) replaces
  * the SVG automatically, mirroring the golf course art loader.

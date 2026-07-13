@@ -40,6 +40,6 @@ around 1600×900 or larger works best (it is cover-scaled).
 ## Poker table background (optional)
 
 `public/assets/poker-table.jpg` (or `.png` / `.webp`) — a top-down casino
-poker table image used as the Poker Points mode background. If present it
+poker table image used as the PokerStr8ts mode background. If present it
 replaces the built-in SVG poker table; if absent, the SVG is shown. A landscape
 image around 1600×900 or larger works best (it is cover-scaled).

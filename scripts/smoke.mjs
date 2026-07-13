@@ -105,7 +105,7 @@ const pokerBgGolf = Number(await page.locator("#bg-poker").evaluate((el) => getC
 assert(pokerBgGolf < 0.05, `poker table hidden in golf mode (opacity ${pokerBgGolf})`);
 await page.screenshot({ path: `${OUT}/bg-golf.png` });
 
-// back to intro, then start a Poker Points game (course hidden, felt shows)
+// back to intro, then start a PokerStr8ts game (course hidden, felt shows)
 await page.reload({ waitUntil: "networkidle" });
 await page.locator(".mode-btn.primary").click();
 await page.waitForSelector(".board");

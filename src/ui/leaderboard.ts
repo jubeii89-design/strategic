@@ -94,7 +94,7 @@ export function renderLeaderboardScreen(opts: LeaderboardScreenOpts): HTMLElemen
   toggle.className = "lb-toggle";
   const pokerBtn = document.createElement("button");
   const golfBtn = document.createElement("button");
-  pokerBtn.textContent = "Poker Points";
+  pokerBtn.textContent = "PokerStr8ts";
   golfBtn.textContent = "Golf";
   toggle.append(pokerBtn, golfBtn);
   panel.appendChild(toggle);

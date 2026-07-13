@@ -74,7 +74,7 @@ export function renderIntro(
     b.addEventListener("click", () => onStart(mode, opponents));
     return b;
   };
-  modes.appendChild(makeBtn("Poker Points", "Score points per hand — chase a high round.", GameMode.PokerStraightsMode, true));
+  modes.appendChild(makeBtn("PokerStr8ts", "Score points per hand — chase a high round.", GameMode.PokerStraightsMode, true));
   modes.appendChild(makeBtn("Golf", "Par & strokes — chase a low round.", GameMode.GolfMode));
 
   screen.append(home, presents, crest(), wordmark, tagline, oppWrap, modes);
