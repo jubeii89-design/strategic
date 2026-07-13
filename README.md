@@ -2,7 +2,7 @@
 
 A **Strategic Titans** ([www.strategictitans.ca](https://www.strategictitans.ca)) web game — the
 solo mode of the original Unity *PokerStraights*, rebuilt in TypeScript. Place one card at a time
-across two grids to build 18 poker hands; play for **Poker Points** (high round) or **Golf**
+across two grids to build 18 poker hands; play for **PokerStr8ts** (high round) or **Golf**
 strokes (low round). The scoring engine is a verified statement-for-statement port of the
 decompiled `Engine.cs`.
 
@@ -73,7 +73,7 @@ and the leaderboard attach without touching either.
 
 Persistent and **human-only** — AI scores are session-only and never written, an invariant that is
 structural (`src/game/leaderboard.ts` has no concept of an AI, and `main.ts` only ever submits the
-human's round). Separate top-20 boards for Poker Points (high) and Golf (low). Storage sits behind
+human's round). Separate top-20 boards for PokerStr8ts (high) and Golf (low). Storage sits behind
 an async `LeaderboardStore`: `LocalLeaderboardStore` (per-browser `localStorage`, ships with the
 static build) today, with a documented `RemoteLeaderboardStore` seam so a shared hosted database
 drops in later with zero UI rework. A qualifying finish prompts for a name (remembered) and shows
