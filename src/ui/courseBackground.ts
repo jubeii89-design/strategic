@@ -9,6 +9,8 @@
  * leaves the SVG in place.
  */
 
+import { ASSET_BASE } from "./assetBase.js";
+
 function roughStripes(): string {
   let s = "";
   for (let i = 0; i < 18; i++) {
@@ -277,12 +279,14 @@ export function courseBackgroundSVG(): string {
 </svg>`;
 }
 
-const RASTER_CANDIDATES = ["assets/course.jpg", "assets/course.png", "assets/course.webp"];
+function rasterCandidates(): string[] {
+  return [`${ASSET_BASE}assets/course.jpg`, `${ASSET_BASE}assets/course.png`, `${ASSET_BASE}assets/course.webp`];
+}
 
 /** Mount the course once into `target`; probe for a raster override. */
 export function mountCourseBackground(target: HTMLElement): void {
   target.innerHTML = courseBackgroundSVG();
-  for (const url of RASTER_CANDIDATES) {
+  for (const url of rasterCandidates()) {
     const img = new Image();
     img.onload = () => {
       target.style.backgroundImage = `url("${url}")`;

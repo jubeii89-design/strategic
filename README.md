@@ -17,11 +17,12 @@ npm test           # engine + game-state unit tests
 npm run typecheck
 ```
 
-Playable slice: branded intro (`www.strategictitans.ca Presents → PokerSt8ts`) → mode select →
-two 4×5 grids with the original's cut corners, next-card rail, PASS button, cards-remaining
-counter, and a live 18-hole scorecard → round-complete panel. Cards and the crest render as
-CSS/SVG and **auto-swap to real PNGs** when dropped into `public/assets/` (see
-`public/assets/README.md`).
+The site is a two-page Vite build: **`/`** is a marketing portal (branding, tagline, gold ENTER
+button) and **`/play/`** is the game itself. Playable slice: branded intro
+(`www.strategictitans.ca Presents → PokerSt8ts`) → mode select → two 4×5 grids with the original's
+cut corners, next-card rail, PASS button, cards-remaining counter, and a live 18-hole scorecard →
+round-complete panel. Cards and the crest render as CSS/SVG and **auto-swap to real PNGs** when
+dropped into `public/assets/` (see `public/assets/README.md`).
 
 ## Status
 
@@ -54,8 +55,12 @@ CSS/SVG and **auto-swap to real PNGs** when dropped into `public/assets/` (see
 - `src/game/leaderboard.ts` — persistent, human-only leaderboard behind a `LeaderboardStore`
   interface (`localStorage` now, `RemoteLeaderboardStore` seam for a shared DB later)
 - `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `standings`, `intro`,
-  `leaderboard`, `courseBackground`; `src/main.ts` wires intro → match → end panel → leaderboard;
-  `src/ui/styles.css`
+  `leaderboard`, `courseBackground`, `pokerTableBackground`, `crest` (shared logo, used by both the
+  portal and the intro), `assetBase` (resolves the optional-art probe paths correctly regardless of
+  which page — `/` or `/play/` — is loaded); `src/main.ts` wires intro → match → end panel →
+  leaderboard; `src/ui/styles.css`
+- `src/portal/` — the marketing portal at site root (`main.ts`, `portal.css`); links to `/play/`
+  via the gold ENTER button
 - `tests/` — parity fixture, screenshot-board oracle, equivalence suite, game-state tests
 - `scripts/smoke.mjs` — headless Chromium end-to-end check (`npm run smoke` against a running
   `preview`)

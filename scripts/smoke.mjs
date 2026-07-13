@@ -43,9 +43,28 @@ page.on("console", (m) => {
   errors.push(t);
 });
 
+// --- Portal (marketing landing page) ---
 await page.goto(BASE, { waitUntil: "networkidle" });
+const portalPresents = await page.locator(".presents").innerText();
+assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
+const portalWordmark = await page.locator(".wordmark").innerText();
+assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
+assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
+// The repo ships a real public/assets/logo.png — assert it actually loaded via
+// the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
+// the check that would catch an asset-path regression; the generic no-console-
+// errors assertion below intentionally ignores art-probe 404s and would miss it.
+await page.waitForSelector(".crest-img", { timeout: 3000 });
+assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+const enterHref = await page.locator(".enter-btn").getAttribute("href");
+assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
+await page.screenshot({ path: `${OUT}/smoke-portal.png` });
 
-// --- Intro screen ---
+await page.locator(".enter-btn").click();
+await page.waitForURL(/\/play\/?$/, { waitUntil: "networkidle" });
+assert(/\/play\/?$/.test(page.url()), `navigated to /play/: ${page.url()}`);
+
+// --- Intro screen (game, now at /play/) ---
 const presents = await page.locator(".presents").innerText();
 assert(/strategictitans\.ca/i.test(presents), `intro shows the site: "${presents.replace(/\n/g, " ")}"`);
 assert(/presents/i.test(presents), "intro says Presents");
@@ -53,6 +72,10 @@ const wordmark = await page.locator(".wordmark").innerText();
 assert(/PokerSt8ts/i.test(wordmark.replace(/\s/g, "")), `wordmark is PokerSt8ts: "${wordmark}"`);
 const link = await page.locator(".presents").getAttribute("href");
 assert(link === "https://www.strategictitans.ca", `site link is real: ${link}`);
+await page.waitForSelector(".crest-img", { timeout: 3000 });
+assert(await page.locator(".crest-img").count() === 1, "game crest loads the real logo.png (../ asset path resolves under /play/)");
+const homeHref = await page.locator(".home-link").getAttribute("href");
+assert(homeHref === "../", `game intro links back to the portal: ${homeHref}`);
 
 // --- Course & poker table backgrounds ---
 assert(await page.locator("#bg .course-svg").count() === 1, "course background SVG mounted");

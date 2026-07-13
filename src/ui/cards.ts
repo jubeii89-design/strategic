@@ -7,6 +7,7 @@
  */
 
 import { type CardId, BLANK_CARD_ID, rankOf, Suit, suitOf } from "../engine/index.js";
+import { ASSET_BASE } from "./assetBase.js";
 
 const SUIT_GLYPH: Record<Suit, string> = {
   [Suit.Spades]: "♠",
@@ -43,7 +44,7 @@ const artCache = new Map<string, boolean>();
 function tryLoadArt(el: HTMLElement, id: CardId): void {
   if (id === BLANK_CARD_ID) return;
   const name = spriteName(id);
-  const url = `assets/cards/${name}.png`;
+  const url = `${ASSET_BASE}assets/cards/${name}.png`;
   if (artCache.get(name) === false) return;
   const img = new Image();
   img.alt = name;

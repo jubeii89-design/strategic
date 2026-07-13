@@ -59,17 +59,33 @@ body[data-bg="poker"] #bg-poker::after {
   content: ""; position: absolute; inset: 0;
   background: radial-gradient(circle at 50% 42%, rgba(10,20,12,0) 40%, rgba(10,20,12,0.3) 100%);
 }
+/* portal: crossfade the golf course and poker table art in rotation */
+body[data-bg="portal"] #bg { animation: portal-fade-course 16s ease-in-out infinite; }
+body[data-bg="portal"] #bg-poker { animation: portal-fade-poker 16s ease-in-out infinite; }
+@keyframes portal-fade-course { 0%, 45% { opacity: 0.85; } 50%, 95% { opacity: 0; } 100% { opacity: 0.85; } }
+@keyframes portal-fade-poker { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 0.85; } 100% { opacity: 0; } }
+body[data-bg="portal"] #bg::after, body[data-bg="portal"] #bg-poker::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(10,20,15,0.35) 0%, rgba(10,20,15,0.62) 100%);
+}
 
 .screen { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ---------- Intro ---------- */
 .intro {
+  position: relative;
   align-items: center;
   justify-content: center;
   text-align: center;
   gap: 0.6rem;
   padding: 2rem 1rem;
 }
+.home-link {
+  position: absolute; top: 0.9rem; left: 1rem;
+  color: var(--cream); opacity: 0.6; text-decoration: none;
+  font-size: 0.82rem; letter-spacing: 0.05em;
+}
+.home-link:hover { opacity: 0.95; }
 .presents {
   text-decoration: none;
   color: var(--cream);

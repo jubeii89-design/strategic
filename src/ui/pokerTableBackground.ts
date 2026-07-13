@@ -5,6 +5,8 @@
  * the SVG automatically, mirroring the golf course art loader.
  */
 
+import { ASSET_BASE } from "./assetBase.js";
+
 function seatMarkers(): string {
   const seats = [
     { x: 800, y: 180 },
@@ -187,15 +189,17 @@ export function pokerTableSVG(): string {
 </svg>`;
 }
 
-const RASTER_CANDIDATES = [
-  "assets/poker-table.jpg",
-  "assets/poker-table.png",
-  "assets/poker-table.webp",
-];
+function rasterCandidates(): string[] {
+  return [
+    `${ASSET_BASE}assets/poker-table.jpg`,
+    `${ASSET_BASE}assets/poker-table.png`,
+    `${ASSET_BASE}assets/poker-table.webp`,
+  ];
+}
 
 export function mountPokerTableBackground(target: HTMLElement): void {
   target.innerHTML = pokerTableSVG();
-  for (const url of RASTER_CANDIDATES) {
+  for (const url of rasterCandidates()) {
     const img = new Image();
     img.onload = () => {
       target.style.backgroundImage = `url("${url}")`;

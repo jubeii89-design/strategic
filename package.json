@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "package": "vite build && cd dist && zip -r ../pokerst8ts-v1.0.0.zip . && cd .. && echo 'Packaged: pokerst8ts-v1.0.0.zip'",
+    "package": "vite build && rm -f pokerst8ts-v1.0.0.zip && cd dist && zip -r ../pokerst8ts-v1.0.0.zip . && cd .. && echo 'Packaged: pokerst8ts-v1.0.0.zip'",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs"

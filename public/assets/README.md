@@ -2,7 +2,9 @@
 
 The game renders crisp CSS/SVG cards and a typographic intro out of the box.
 Drop real art here and it is picked up automatically — a missing file always
-falls back to the built-in rendering, so nothing ever breaks.
+falls back to the built-in rendering, so nothing ever breaks. This directory
+is shared by both site pages — the marketing portal at `/` and the game at
+`/play/` — so an image dropped in here shows up on both.
 
 ## Logo
 

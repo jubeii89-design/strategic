@@ -15,7 +15,10 @@ import { renderLeaderboardScreen, promptForName } from "./ui/leaderboard.js";
 import { cardFace } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
 import { mountPokerTableBackground } from "./ui/pokerTableBackground.js";
+import { setAssetBase } from "./ui/assetBase.js";
 import "./ui/styles.css";
+
+setAssetBase("../"); // this entry lives one level under the site root, at /play/
 
 const app = document.getElementById("app")!;
 const bg = document.getElementById("bg");
