@@ -8,6 +8,7 @@ import { setAssetBase } from "../ui/assetBase.js";
 import { mountCourseBackground } from "../ui/courseBackground.js";
 import { mountPokerTableBackground } from "../ui/pokerTableBackground.js";
 import { crest } from "../ui/crest.js";
+import { mountBackgroundMusic } from "../ui/audio.js";
 import "../ui/styles.css";
 import "./portal.css";
 
@@ -18,6 +19,7 @@ const bg = document.getElementById("bg");
 const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
+mountBackgroundMusic(document.body);
 document.body.dataset.bg = "portal";
 
 function renderPortal(): HTMLElement {

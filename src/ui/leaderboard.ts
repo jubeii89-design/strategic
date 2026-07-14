@@ -182,3 +182,37 @@ export function promptForName(rank: number): Promise<string | null> {
     input.select();
   });
 }
+
+/** Modal asking whether to play again. Resolves true (Yes) or false (No). */
+export function promptPlayAgain(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "overlay";
+    const panel = document.createElement("div");
+    panel.className = "end-panel play-again-prompt";
+
+    const h = document.createElement("h2");
+    h.textContent = "Play again?";
+
+    const row = document.createElement("div");
+    row.className = "name-actions";
+    const yes = document.createElement("button");
+    yes.className = "mode-btn primary";
+    yes.innerHTML = `<span class="mode-label">Yes</span>`;
+    const no = document.createElement("button");
+    no.className = "mode-btn";
+    no.innerHTML = `<span class="mode-label">No</span>`;
+    row.append(yes, no);
+
+    const finish = (value: boolean) => {
+      overlay.remove();
+      resolve(value);
+    };
+    yes.addEventListener("click", () => finish(true));
+    no.addEventListener("click", () => finish(false));
+
+    panel.append(h, row);
+    overlay.appendChild(panel);
+    document.getElementById("app")!.appendChild(overlay);
+  });
+}

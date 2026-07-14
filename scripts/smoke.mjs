@@ -58,6 +58,7 @@ await page.waitForSelector(".crest-img", { timeout: 3000 });
 assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
 const enterHref = await page.locator(".enter-btn").getAttribute("href");
 assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
+assert(await page.locator(".mute-btn").count() === 0, "no mute button without a music file (portal)");
 await page.screenshot({ path: `${OUT}/smoke-portal.png` });
 
 await page.locator(".enter-btn").click();
@@ -76,6 +77,7 @@ await page.waitForSelector(".crest-img", { timeout: 3000 });
 assert(await page.locator(".crest-img").count() === 1, "game crest loads the real logo.png (../ asset path resolves under /play/)");
 const homeHref = await page.locator(".home-link").getAttribute("href");
 assert(homeHref === "../", `game intro links back to the portal: ${homeHref}`);
+assert(await page.locator(".mute-btn").count() === 0, "no mute button without a music file (game)");
 
 // --- Course & poker table backgrounds ---
 assert(await page.locator("#bg .course-svg").count() === 1, "course background SVG mounted");
@@ -147,8 +149,10 @@ while (guard++ < 60) {
 }
 assert(await page.locator(".overlay").count() > 0, "end panel appears when the round completes");
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
+assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the end panel");
+assert(await page.locator(".score-box").count() === 0, "strokes/score box removed from the rail");
 
-// --- Final standings rank all 4 players ---
+// --- Final standings, centered on screen, rank all 4 players ---
 const finalRows = await page.locator(".standings.final .standing-row").count();
 assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
 const roundCell = await page.locator(".scorecard .round").innerText();
@@ -156,7 +160,8 @@ const youPts = await page.locator(".standings.final .standing-row.you .pts").inn
 assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
 
-// --- Leaderboard: first finish always qualifies → name prompt → submit ---
+// --- Press any key to continue → qualifying finish → name prompt → submit ---
+await page.keyboard.press("Enter");
 await page.waitForSelector(".name-prompt");
 assert(await page.locator(".name-prompt .name-input").count() === 1, "name prompt appears on a qualifying finish");
 await page.locator(".name-prompt .name-input").fill("TESTER");
@@ -170,6 +175,13 @@ assert(youPts === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText(
 for (const ai of ["Leonidas", "Ajax", "Helena", "Cyrus"]) {
   assert(!lbNames.includes(ai), `AI '${ai}' is NOT on the leaderboard`);
 }
+
+// --- Play-again prompt appears automatically after the leaderboard ---
+await page.waitForSelector(".play-again-prompt");
+assert((await page.locator(".play-again-prompt h2").innerText()) === "Play again?", "play-again prompt appears");
+await page.screenshot({ path: `${OUT}/smoke-play-again.png` });
+await page.locator(".play-again-prompt .mode-btn:not(.primary)").click(); // No — stay on the leaderboard
+assert(await page.locator(".play-again-prompt").count() === 0, "play-again prompt closes on No");
 await page.screenshot({ path: `${OUT}/smoke-leaderboard.png` });
 
 // --- Persistence across a full page reload (localStorage) ---
