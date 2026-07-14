@@ -43,3 +43,12 @@ around 1600×900 or larger works best (it is cover-scaled).
 poker table image used as the PokerStr8ts mode background. If present it
 replaces the built-in SVG poker table; if absent, the SVG is shown. A landscape
 image around 1600×900 or larger works best (it is cover-scaled).
+
+## Background music (optional)
+
+`public/assets/music.mp3` (or `.ogg`) — a looping background track, played on
+both the portal and the game. If present, a mute/unmute button appears in the
+top-right corner automatically; if absent, no button is shown and nothing
+plays. Use royalty-free / copyright-free music only. Browsers block
+autoplay-with-sound until the player's first click or key press, so the track
+starts as soon as they interact with the page.

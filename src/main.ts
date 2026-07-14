@@ -11,10 +11,11 @@ import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
 import { renderStandings } from "./ui/standings.js";
-import { renderLeaderboardScreen, promptForName } from "./ui/leaderboard.js";
+import { renderLeaderboardScreen, promptForName, promptPlayAgain } from "./ui/leaderboard.js";
 import { cardFace } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
 import { mountPokerTableBackground } from "./ui/pokerTableBackground.js";
+import { mountBackgroundMusic } from "./ui/audio.js";
 import { setAssetBase } from "./ui/assetBase.js";
 import "./ui/styles.css";
 
@@ -25,6 +26,7 @@ const bg = document.getElementById("bg");
 const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
+mountBackgroundMusic(document.body);
 
 const leaderboard = new Leaderboard(new LocalLeaderboardStore());
 
@@ -57,11 +59,6 @@ function renderGame(match: Match): void {
   rail.className = "rail";
 
   rail.appendChild(renderStandings(match.standings(), match.mode));
-
-  const scoreBox = document.createElement("div");
-  scoreBox.className = "score-box";
-  scoreBox.innerHTML = `<span class="score-box-label">${match.mode === GameMode.GolfMode ? "STROKES" : "SCORE"}</span><span class="score-box-value">${score.round}</span>`;
-  rail.appendChild(scoreBox);
 
   const nextWrap = document.createElement("div");
   nextWrap.className = "next-card";
@@ -122,35 +119,39 @@ function showEndPanel(match: Match): void {
 
   panel.appendChild(renderStandings(match.standings(), match.mode, { final: true }));
 
-  const again = document.createElement("button");
-  again.className = "mode-btn primary";
-  again.innerHTML = `<span class="mode-label">Play Again</span>`;
-  again.addEventListener("click", showIntro);
-  const menu = document.createElement("button");
-  menu.className = "mode-btn";
-  menu.innerHTML = `<span class="mode-label">Main Menu</span>`;
-  menu.addEventListener("click", showIntro);
-  const board = document.createElement("button");
-  board.className = "mode-btn";
-  board.innerHTML = `<span class="mode-label">Leaderboard</span>`;
-  board.addEventListener("click", () => showLeaderboard(match.mode));
-  panel.append(again, menu, board);
+  const hint = document.createElement("p");
+  hint.className = "end-hint";
+  hint.textContent = "Press any key to continue";
+  panel.appendChild(hint);
+
   overlay.appendChild(panel);
   app.appendChild(overlay);
 
-  // Submit ONLY the human's score to the persistent, human-only leaderboard.
-  void maybeSubmitHumanScore(match, overlay);
+  const advance = () => {
+    document.removeEventListener("keydown", advance);
+    overlay.removeEventListener("click", advance);
+    overlay.remove();
+    void continueAfterRound(match);
+  };
+  document.addEventListener("keydown", advance);
+  overlay.addEventListener("click", advance);
 }
 
-async function maybeSubmitHumanScore(match: Match, overlay: HTMLElement): Promise<void> {
+// Submit ONLY the human's score to the persistent, human-only leaderboard,
+// then show the leaderboard and ask whether to play again.
+async function continueAfterRound(match: Match): Promise<void> {
   const humanScore = scoreBoard(match.human.state.snapshot().board, match.mode).round;
-  if (!(await leaderboard.wouldQualify(humanScore, match.mode))) return;
-  const name = await promptForName(match.humanRank());
-  if (name === null) return; // player skipped
-  const entry = { name: cleanName(name), score: humanScore, mode: match.mode, date: todayISO() };
-  const result = await leaderboard.submit(entry);
-  if (!overlay.isConnected) return; // player already navigated away
-  if (result.qualified) showLeaderboardWith(match.mode, entry);
+  let highlight: Parameters<typeof renderLeaderboardScreen>[0]["highlight"];
+  if (await leaderboard.wouldQualify(humanScore, match.mode)) {
+    const name = await promptForName(match.humanRank());
+    if (name !== null) {
+      const entry = { name: cleanName(name), score: humanScore, mode: match.mode, date: todayISO() };
+      const result = await leaderboard.submit(entry);
+      if (result.qualified) highlight = entry;
+    }
+  }
+  showLeaderboardWith(match.mode, highlight);
+  if (await promptPlayAgain()) showIntro();
 }
 
 function showLeaderboardWith(mode: GameMode, highlight: Parameters<typeof renderLeaderboardScreen>[0]["highlight"]): void {
