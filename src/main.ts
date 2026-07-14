@@ -12,6 +12,7 @@ import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
 import { renderStandings } from "./ui/standings.js";
+import { renderMultiScorecard } from "./ui/multiScorecard.js";
 import { renderLeaderboardScreen, promptForName, promptPlayAgain } from "./ui/leaderboard.js";
 import { cardFace, cardLabel } from "./ui/cards.js";
 import { mountCourseBackground } from "./ui/courseBackground.js";
@@ -105,11 +106,11 @@ function renderGame(match: Match): void {
 }
 
 /** Show an overlay panel; call `next()` on the first keypress or click. */
-function showOverlay(build: (panel: HTMLElement) => void, next: () => void): void {
+function showOverlay(build: (panel: HTMLElement) => void, next: () => void, wide = false): void {
   const overlay = document.createElement("div");
   overlay.className = "overlay";
   const panel = document.createElement("div");
-  panel.className = "end-panel";
+  panel.className = "end-panel" + (wide ? " wide" : "");
   build(panel);
   overlay.appendChild(panel);
   app.appendChild(overlay);
@@ -136,7 +137,8 @@ function bestHand(
   return { handName: top.handName, points: top.points, topCards: rec?.topCards ?? [] };
 }
 
-// Stage 1: your own score and a standout stat, centered on screen.
+// Stage 1: your own scorecard — the same HOLE/PAR/SCORE grid shown during
+// play — centered on screen, plus a best-hand callout.
 function showEndPanel(match: Match): void {
   const rank = match.humanRank();
   const total = match.ais.length + 1;
@@ -149,10 +151,7 @@ function showEndPanel(match: Match): void {
     h2.textContent = heading;
     panel.appendChild(h2);
 
-    const yourScore = document.createElement("p");
-    yourScore.className = "final-score";
-    yourScore.innerHTML = `<span class="final-score-label">Your Score</span><span class="final-score-value">${score.round}</span>`;
-    panel.appendChild(yourScore);
+    panel.appendChild(renderScorecard(score, match.mode));
 
     if (best) {
       const stat = document.createElement("p");
@@ -168,21 +167,27 @@ function showEndPanel(match: Match): void {
     hint.className = "end-hint";
     hint.textContent = "Press any key to continue";
     panel.appendChild(hint);
-  }, () => showFinalStandings(match));
+  }, () => showFinalStandings(match), true);
 }
 
-// Stage 2: everyone's scores, centered on screen.
+// Stage 2: everyone's scoring — the same grid, one row per player.
 function showFinalStandings(match: Match): void {
+  const rows = [match.human, ...match.ais].map((p) => ({
+    name: p.name,
+    isHuman: p.isHuman,
+    board: p.state.snapshot().board,
+  }));
+
   showOverlay((panel) => {
     const h2 = document.createElement("h2");
     h2.textContent = "Final Standings";
     panel.appendChild(h2);
-    panel.appendChild(renderStandings(match.standings(), match.mode, { final: true }));
+    panel.appendChild(renderMultiScorecard(rows, match.mode));
     const hint = document.createElement("p");
     hint.className = "end-hint";
     hint.textContent = "Press any key to continue";
     panel.appendChild(hint);
-  }, () => void continueAfterRound(match));
+  }, () => void continueAfterRound(match), true);
 }
 
 // Persist the human's top-2-cards-per-hand history, submit their score to the

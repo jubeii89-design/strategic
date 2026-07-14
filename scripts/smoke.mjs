@@ -159,25 +159,26 @@ assert(await page.locator(".overlay").count() > 0, "end panel appears when the r
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
 assert(await page.locator(".score-box").count() === 0, "strokes/score box removed from the rail");
 
-// --- Stage 1: your own score + a stat, centered on screen ---
-assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the personal-stats panel");
-const roundCell = await page.locator(".scorecard .round").innerText();
-const finalScoreValue = await page.locator(".final-score-value").innerText();
-assert(finalScoreValue === roundCell, `personal stats score (${finalScoreValue}) matches scorecard ROUND (${roundCell})`);
-assert(await page.locator(".final-stat").count() === 1, "best-hand stat shown on the personal-stats panel");
+// --- Stage 1: your own scorecard (same grid shown during play), centered on screen ---
+assert(await page.locator(".overlay .end-panel.wide").count() === 1, "stage 1 panel is the wide variant");
+assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the personal scorecard panel");
+const roundCell = await page.locator(".screen.game .scorecard .round").innerText();
+const overlayRound = await page.locator(".overlay .scorecard .round").innerText();
+assert(overlayRound === roundCell, `personal scorecard round (${overlayRound}) matches the in-game scorecard (${roundCell})`);
+assert(await page.locator(".final-stat").count() === 1, "best-hand stat shown alongside the personal scorecard");
 await page.screenshot({ path: `${OUT}/smoke-stats.png` });
 
-// --- Press any key → Stage 2: everyone's scores, centered on screen ---
+// --- Press any key → Stage 2: everyone's scoring grid, centered on screen ---
 await page.keyboard.press("Enter");
-await page.waitForSelector(".standings.final");
+await page.waitForSelector(".multi-scorecard");
 assert(
   (await page.locator(".overlay .end-panel h2").innerText()) === "Final Standings",
   "stage 2 heading is Final Standings",
 );
-const finalRows = await page.locator(".standings.final .standing-row").count();
-assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
-const youPts = await page.locator(".standings.final .standing-row.you .pts").innerText();
-assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
+const msRows = await page.locator(".ms-table tr").count(); // header + 4 players
+assert(msRows === 5, `everyone's-scoring grid has header + 4 player rows (got ${msRows})`);
+const youTotal = await page.locator(".ms-table tr.ms-you .ms-total").innerText();
+assert(youTotal === roundCell, `human total in the multi-scorecard (${youTotal}) matches the round (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
 
 // --- Press any key → qualifying finish → name prompt → submit ---
@@ -201,7 +202,7 @@ assert(
 const lbNames = await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(lbNames.includes("TESTER"), `submitted score shows on the leaderboard: ${JSON.stringify(lbNames)}`);
 assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
-assert(youPts === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+assert(roundCell === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
 // AI names never appear as leaderboard entries (human-only)
 for (const ai of ["Leonidas", "Ajax", "Helena", "Cyrus"]) {
   assert(!lbNames.includes(ai), `AI '${ai}' is NOT on the leaderboard`);
