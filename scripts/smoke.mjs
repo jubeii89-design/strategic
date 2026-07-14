@@ -157,24 +157,47 @@ while (guard++ < 60) {
 }
 assert(await page.locator(".overlay").count() > 0, "end panel appears when the round completes");
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
-assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the end panel");
 assert(await page.locator(".score-box").count() === 0, "strokes/score box removed from the rail");
 
-// --- Final standings, centered on screen, rank all 4 players ---
+// --- Stage 1: your own score + a stat, centered on screen ---
+assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the personal-stats panel");
+const roundCell = await page.locator(".scorecard .round").innerText();
+const finalScoreValue = await page.locator(".final-score-value").innerText();
+assert(finalScoreValue === roundCell, `personal stats score (${finalScoreValue}) matches scorecard ROUND (${roundCell})`);
+assert(await page.locator(".final-stat").count() === 1, "best-hand stat shown on the personal-stats panel");
+await page.screenshot({ path: `${OUT}/smoke-stats.png` });
+
+// --- Press any key → Stage 2: everyone's scores, centered on screen ---
+await page.keyboard.press("Enter");
+await page.waitForSelector(".standings.final");
+assert(
+  (await page.locator(".overlay .end-panel h2").innerText()) === "Final Standings",
+  "stage 2 heading is Final Standings",
+);
 const finalRows = await page.locator(".standings.final .standing-row").count();
 assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
-const roundCell = await page.locator(".scorecard .round").innerText();
 const youPts = await page.locator(".standings.final .standing-row.you .pts").innerText();
 assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
 
-// --- Press any key to continue → qualifying finish → name prompt → submit ---
+// --- Press any key → qualifying finish → name prompt → submit ---
 await page.keyboard.press("Enter");
 await page.waitForSelector(".name-prompt");
 assert(await page.locator(".name-prompt .name-input").count() === 1, "name prompt appears on a qualifying finish");
 await page.locator(".name-prompt .name-input").fill("TESTER");
 await page.locator(".name-prompt .mode-btn.primary").click();
 await page.waitForSelector(".leaderboard-screen");
+assert(await page.locator(".lb-signboard").count() === 1, "leaderboard renders as a signboard");
+assert(await page.locator(".lb-sign-svg-el").count() === 1, "wooden signpost SVG (two posts) is mounted");
+
+// --- Per-hand top-2-card history persisted to the "database" (localStorage) ---
+const handHistory = await page.evaluate(() => JSON.parse(localStorage.getItem("pokerst8ts.handHistory.v1") || "[]"));
+assert(handHistory.length === 18, `all 18 completed hands recorded (got ${handHistory.length})`);
+assert(
+  handHistory.every((h) => h.playerName === "TESTER" && Array.isArray(h.topCards) && h.topCards.length <= 2),
+  "each hand record has the submitted name and up to 2 top cards",
+);
+
 const lbNames = await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(lbNames.includes("TESTER"), `submitted score shows on the leaderboard: ${JSON.stringify(lbNames)}`);
 assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");

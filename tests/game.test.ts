@@ -73,3 +73,50 @@ describe("solo game state", () => {
     expect(g.remaining).toBe(0);
   });
 });
+
+describe("play log and per-hand card tracking", () => {
+  it("records every place/pass action in order, but preplaced cards aren't logged as played", () => {
+    const g = seeded(11);
+    expect(g.playLog).toEqual([]); // preplacement doesn't touch the play log
+    const card1 = g.currentCard;
+    const cell1 = [...playableCells(0), ...playableCells(1)].find((c) => g.canPlace(c))!;
+    g.place(cell1);
+    g.pass();
+    expect(g.playLog).toHaveLength(2);
+    expect(g.playLog[0]).toMatchObject({ seq: 0, action: "place", card: card1, cell: cell1 });
+    expect(g.playLog[1]).toMatchObject({ seq: 1, action: "pass", cell: null });
+  });
+
+  it("records a hand's top 2 cards exactly once, the moment its last cell fills", () => {
+    const g = seeded(21);
+    let guard = 0;
+    let lastCount = 0;
+    while (!g.isOver && guard++ < 200) {
+      const cell = [...playableCells(0), ...playableCells(1)].find((c) => g.canPlace(c));
+      if (cell) g.place(cell);
+      else g.pass();
+      // handCompletions only ever grows, one entry per hole, never shrinks or duplicates
+      expect(g.handCompletions.length).toBeGreaterThanOrEqual(lastCount);
+      const holes = g.handCompletions.map((h) => h.hole);
+      expect(new Set(holes).size).toBe(holes.length);
+      lastCount = g.handCompletions.length;
+    }
+    expect(g.isOver).toBe(true);
+    // a completed board (greedy fill always finishes it) records all 18 hands
+    expect(g.handCompletions).toHaveLength(18);
+
+    const score = scoreBoard(g.snapshot().board, GameMode.PokerStraightsMode);
+    for (const completion of g.handCompletions) {
+      const hand = score.hands.find((h) => h.hole === completion.hole)!;
+      expect(hand.complete).toBe(true);
+      // the recorded cards are exactly that hand's cells, in cell order
+      const expectedIds = hand.hand.cells.map((c) => g.snapshot().board.cards[c.grid]![c.row]![c.col]);
+      expect(completion.cards).toEqual(expectedIds);
+      // topCards are 2 of the hand's cards, ranked highest-first (Ace high)
+      expect(completion.topCards).toHaveLength(Math.min(2, completion.cards.length));
+      for (const c of completion.topCards) expect(completion.cards).toContain(c);
+      const rankHigh = (id: number) => (id % 100 === 1 ? 14 : id % 100);
+      expect(rankHigh(completion.topCards[0]!)).toBeGreaterThanOrEqual(rankHigh(completion.topCards[1]!));
+    }
+  });
+});

@@ -39,6 +39,12 @@ export function spriteName(id: CardId): string {
   return `${SUIT_NAME[suitOf(id)]}_${label}`;
 }
 
+/** Short display label for a card, e.g. "K♠", "10♥". */
+export function cardLabel(id: CardId): string {
+  if (id === BLANK_CARD_ID) return "—";
+  return `${rankLabel(rankOf(id))}${SUIT_GLYPH[suitOf(id)]}`;
+}
+
 const artCache = new Map<string, boolean>();
 
 function tryLoadArt(el: HTMLElement, id: CardId): void {

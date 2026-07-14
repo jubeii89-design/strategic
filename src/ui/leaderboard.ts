@@ -6,6 +6,7 @@
 
 import { GameMode } from "../engine/index.js";
 import { type Leaderboard, type LeaderboardEntry } from "../game/leaderboard.js";
+import { leaderboardSignSVG } from "./leaderboardSign.js";
 
 const NAME_KEY = "pokerst8ts.playerName";
 
@@ -76,10 +77,18 @@ export interface LeaderboardScreenOpts {
   onBack: () => void;
 }
 
-/** Full leaderboard screen with a Poker/Golf toggle. */
+/** Full leaderboard screen with a Poker/Golf toggle, shown as a wooden signpost. */
 export function renderLeaderboardScreen(opts: LeaderboardScreenOpts): HTMLElement {
   const screen = document.createElement("div");
   screen.className = "screen leaderboard-screen";
+
+  const signboard = document.createElement("div");
+  signboard.className = "lb-signboard";
+
+  const signSvg = document.createElement("div");
+  signSvg.className = "lb-sign-svg";
+  signSvg.innerHTML = leaderboardSignSVG();
+  signboard.appendChild(signSvg);
 
   const panel = document.createElement("div");
   panel.className = "lb-panel";
@@ -124,7 +133,8 @@ export function renderLeaderboardScreen(opts: LeaderboardScreenOpts): HTMLElemen
   back.addEventListener("click", opts.onBack);
   panel.appendChild(back);
 
-  screen.appendChild(panel);
+  signboard.appendChild(panel);
+  screen.appendChild(signboard);
   void refresh();
   return screen;
 }
