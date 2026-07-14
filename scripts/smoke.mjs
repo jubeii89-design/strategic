@@ -58,7 +58,10 @@ await page.waitForSelector(".crest-img", { timeout: 3000 });
 assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
 const enterHref = await page.locator(".enter-btn").getAttribute("href");
 assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
-assert(await page.locator(".mute-btn").count() === 0, "no mute button without a music file (portal)");
+// The repo now ships public/assets/music.mp3 — the mute button should appear
+// (and default to unmuted) since a track was found.
+await page.waitForSelector(".mute-btn", { timeout: 3000 });
+assert(await page.locator(".mute-btn").innerText() === "🔊", "mute button shows unmuted by default (portal)");
 await page.screenshot({ path: `${OUT}/smoke-portal.png` });
 
 await page.locator(".enter-btn").click();
@@ -77,7 +80,12 @@ await page.waitForSelector(".crest-img", { timeout: 3000 });
 assert(await page.locator(".crest-img").count() === 1, "game crest loads the real logo.png (../ asset path resolves under /play/)");
 const homeHref = await page.locator(".home-link").getAttribute("href");
 assert(homeHref === "../", `game intro links back to the portal: ${homeHref}`);
-assert(await page.locator(".mute-btn").count() === 0, "no mute button without a music file (game)");
+await page.waitForSelector(".mute-btn", { timeout: 3000 });
+assert(await page.locator(".mute-btn").innerText() === "🔊", "mute button shows unmuted by default (game)");
+await page.locator(".mute-btn").click();
+assert(await page.locator(".mute-btn").innerText() === "🔇", "mute button toggles to muted");
+await page.locator(".mute-btn").click();
+assert(await page.locator(".mute-btn").innerText() === "🔊", "mute button toggles back to unmuted");
 
 // --- Course & poker table backgrounds ---
 assert(await page.locator("#bg .course-svg").count() === 1, "course background SVG mounted");
