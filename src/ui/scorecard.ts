@@ -4,6 +4,7 @@
  */
 
 import { type BoardScore, GameMode } from "../engine/index.js";
+import { designOverride } from "./designOverrides.js";
 
 const PARS = [3, 4, 4, 4, 3, 4, 5, 5, 4]; // per nine (rows then columns)
 
@@ -15,6 +16,11 @@ export function renderScorecard(score: BoardScore, mode: GameMode): HTMLElement 
   const golf = mode === GameMode.GolfMode;
   const wrap = document.createElement("div");
   wrap.className = "scorecard-wrap";
+  const bg = designOverride("scoreboard");
+  if (bg) {
+    wrap.classList.add("has-bg");
+    wrap.style.backgroundImage = `url("${bg}")`;
+  }
 
   const table = document.createElement("table");
   table.className = "scorecard";

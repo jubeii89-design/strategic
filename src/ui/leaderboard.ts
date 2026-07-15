@@ -7,6 +7,7 @@
 import { GameMode } from "../engine/index.js";
 import { type Leaderboard, type LeaderboardEntry } from "../game/leaderboard.js";
 import { leaderboardSignSVG } from "./leaderboardSign.js";
+import { designOverride } from "./designOverrides.js";
 
 const NAME_KEY = "pokerst8ts.playerName";
 
@@ -84,6 +85,11 @@ export function renderLeaderboardScreen(opts: LeaderboardScreenOpts): HTMLElemen
 
   const signboard = document.createElement("div");
   signboard.className = "lb-signboard";
+  const bg = designOverride("leaderboard");
+  if (bg) {
+    signboard.classList.add("has-bg");
+    signboard.style.backgroundImage = `url("${bg}")`;
+  }
 
   const signSvg = document.createElement("div");
   signSvg.className = "lb-sign-svg";

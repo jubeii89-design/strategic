@@ -223,6 +223,9 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 
 /* ---------- Scorecard ---------- */
 .scorecard-wrap { overflow-x: auto; width: 100%; }
+/* optional drop-in raster design (see public/assets/README.md) */
+.scorecard-wrap.has-bg { background-size: cover; background-position: center; border-radius: 8px; padding: 3px; }
+.scorecard-wrap.has-bg .scorecard { background: rgba(20,48,79,0.72); }
 .scorecard { border-collapse: collapse; margin: 0 auto; font-size: 0.72rem; background: rgba(20,48,79,0.6); border: 2px solid var(--gold); border-radius: 6px; }
 .scorecard th, .scorecard td { border: 1px solid rgba(200,162,74,0.35); padding: 2px 5px; text-align: center; min-width: 20px; }
 .scorecard th { background: #3a2417; color: var(--cream); font-size: 0.62rem; letter-spacing: 0.04em; }
@@ -249,6 +252,9 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
   box-shadow: inset -2px -2px 3px rgba(0,0,0,0.25), 2px 3px 0 rgba(0,0,0,0.15);
 }
 .ms-panel { width: 100%; background: rgba(10,28,50,0.55); border: 3px solid var(--gold); border-radius: 14px; padding: 0.8rem; }
+.ms-panel.has-bg { background-size: cover; background-position: center; }
+.ms-panel.has-bg .ms-table th { background: rgba(28,63,110,0.88); }
+.ms-panel.has-bg .ms-table td { background: rgba(10,28,50,0.4); }
 .ms-table-wrap { overflow-x: auto; width: 100%; }
 .ms-table { border-collapse: collapse; margin: 0 auto; font-size: 0.72rem; min-width: 100%; }
 .ms-table th, .ms-table td { border: 1px solid rgba(200,162,74,0.3); padding: 3px 6px; text-align: center; }
@@ -267,6 +273,9 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 /* a golf-course "LEADERS" signpost: a single SVG wood post behind an arched
    cream-and-olive board, matching a classic tournament leaderboard sign */
 .lb-signboard { position: relative; width: min(600px, 96vw); margin: 0 auto; padding-bottom: 100px; }
+.lb-signboard.has-bg { background-size: cover; background-position: center; border-radius: 20px; }
+.lb-signboard.has-bg .lb-sign-svg { display: none; }
+.lb-signboard.has-bg .lb-panel { background: rgba(244,236,216,0.6); }
 .lb-sign-svg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .lb-sign-svg-el { display: block; width: 100%; height: 100%; }
 

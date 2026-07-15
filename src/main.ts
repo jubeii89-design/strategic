@@ -19,6 +19,7 @@ import { mountCourseBackground } from "./ui/courseBackground.js";
 import { mountPokerTableBackground } from "./ui/pokerTableBackground.js";
 import { mountBackgroundMusic } from "./ui/audio.js";
 import { setAssetBase } from "./ui/assetBase.js";
+import { initDesignOverrides } from "./ui/designOverrides.js";
 import "./ui/styles.css";
 
 setAssetBase("../"); // this entry lives one level under the site root, at /play/
@@ -29,6 +30,7 @@ const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
 mountBackgroundMusic(document.body);
+initDesignOverrides();
 
 const leaderboard = new Leaderboard(new LocalLeaderboardStore());
 const handHistory = new HandHistory(new LocalHandHistoryStore());

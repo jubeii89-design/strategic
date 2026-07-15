@@ -44,6 +44,16 @@ poker table image used as the PokerStr8ts mode background. If present it
 replaces the built-in SVG poker table; if absent, the SVG is shown. A landscape
 image around 1600×900 or larger works best (it is cover-scaled).
 
+## Scoreboard / leaderboard design (optional)
+
+`public/assets/scoreboard.jpg` (or `.jpeg` / `.png`) — replaces the scorecard's
+background (used both at the top of the game and on the end-of-round score
+screens) with your own image. `public/assets/leaderboard.jpg` (or `.jpeg` /
+`.png`) does the same for the leaderboard sign. Either is optional; a missing
+file leaves the built-in look in place. Checked once per page load and
+cached — later re-renders (which happen often during play) reuse the cached
+result instead of re-requesting the file, so there's no added load cost.
+
 ## Background music (optional)
 
 `public/assets/music.mp3` (or `.ogg`) — a looping background track, played on

@@ -5,6 +5,7 @@
  */
 
 import { GameMode, scoreBoard, type BoardState } from "../engine/index.js";
+import { designOverride } from "./designOverrides.js";
 
 export interface ScoreRow {
   name: string;
@@ -25,6 +26,11 @@ export function renderMultiScorecard(rows: ScoreRow[], mode: GameMode): HTMLElem
 
   const panel = document.createElement("div");
   panel.className = "ms-panel";
+  const bg = designOverride("scoreboard");
+  if (bg) {
+    panel.classList.add("has-bg");
+    panel.style.backgroundImage = `url("${bg}")`;
+  }
 
   const tableWrap = document.createElement("div");
   tableWrap.className = "ms-table-wrap";
