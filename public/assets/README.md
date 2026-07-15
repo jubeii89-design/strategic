@@ -30,6 +30,16 @@ The four sprite sheets from the original game need to be sliced into these 52
 individual PNGs (portrait, transparent or card-coloured background). Until then
 the SVG cards are shown.
 
+## Portal hero image (optional)
+
+`public/assets/portal.jpg` (or `.jpeg` / `.png`) — a full-bleed hero image for
+the marketing portal at `/`. If present, it replaces the crossfading
+golf-course/poker-table backdrop **and** the wordmark/tagline/feature-bullet
+text entirely — only the gold ENTER button stays on top — so a single
+finished banner image can be the whole landing page. If absent, the default
+animated look is shown. Checked once per page load and cached, so this has no
+added load cost on later visits.
+
 ## Course background (optional)
 
 `public/assets/course.jpg` (or `.png` / `.webp`) — a top-down golf-course
