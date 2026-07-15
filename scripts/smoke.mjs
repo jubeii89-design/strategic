@@ -45,17 +45,30 @@ page.on("console", (m) => {
 
 // --- Portal (marketing landing page) ---
 await page.goto(BASE, { waitUntil: "networkidle" });
-const portalPresents = await page.locator(".presents").innerText();
-assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
-const portalWordmark = await page.locator(".wordmark").innerText();
-assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
-assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
-// The repo ships a real public/assets/logo.png — assert it actually loaded via
-// the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
-// the check that would catch an asset-path regression; the generic no-console-
-// errors assertion below intentionally ignores art-probe 404s and would miss it.
-await page.waitForSelector(".crest-img", { timeout: 3000 });
-assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+// The repo may ship a custom public/assets/portal.(jpg|jpeg|png) hero image,
+// which replaces the text overlay entirely (see designOverrides/portal/main.ts)
+// — wait for that async probe to settle either way before asserting.
+await page.waitForFunction(
+  () => document.body.classList.contains("has-portal-bg") || document.readyState === "complete",
+  { timeout: 2000 },
+).catch(() => {});
+await page.waitForTimeout(300);
+const hasPortalBg = await page.evaluate(() => document.body.classList.contains("has-portal-bg"));
+if (hasPortalBg) {
+  assert(await page.locator(".portal-copy").isHidden(), "portal text overlay hidden when a custom hero image is active");
+} else {
+  const portalPresents = await page.locator(".presents").innerText();
+  assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
+  const portalWordmark = await page.locator(".wordmark").innerText();
+  assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
+  assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
+  // The repo ships a real public/assets/logo.png — assert it actually loaded via
+  // the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
+  // the check that would catch an asset-path regression; the generic no-console-
+  // errors assertion below intentionally ignores art-probe 404s and would miss it.
+  await page.waitForSelector(".crest-img", { timeout: 3000 });
+  assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+}
 const enterHref = await page.locator(".enter-btn").getAttribute("href");
 assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
 // The repo now ships public/assets/music.mp3 — the mute button should appear
