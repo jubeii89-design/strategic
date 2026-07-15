@@ -271,14 +271,28 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 .leaderboard-screen { align-items: center; justify-content: center; padding: 2rem 1rem; }
 
 /* a golf-course "LEADERS" signpost: a single SVG wood post behind an arched
-   cream-and-olive board, matching a classic tournament leaderboard sign */
+   cream-and-olive board, matching a classic tournament leaderboard sign.
+   Used only when no custom public/assets/leaderboard.* image is present. */
 .lb-signboard { position: relative; width: min(600px, 96vw); margin: 0 auto; padding-bottom: 100px; }
-.lb-signboard.has-bg { background-size: cover; background-position: center; border-radius: 20px; }
-.lb-signboard.has-bg .lb-sign-svg { display: none; }
-.lb-signboard.has-bg .lb-panel { background: rgba(244,236,216,0.6); padding-top: 4.5rem; }
-.lb-signboard.has-bg .lb-title { display: none; }
 .lb-sign-svg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .lb-sign-svg-el { display: block; width: 100%; height: 100%; }
+
+/* Custom skin: real name/score data positioned onto the uploaded leaderboard
+   image's own row/column grid (see LB_SKIN_* constants in leaderboard.ts). */
+.lb-skin-wrap { width: min(560px, 96vw); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+.lb-skin-toggle { order: -1; }
+.lb-skin-board { position: relative; width: 100%; background-size: 100% 100%; background-position: center; border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.5); }
+.lb-skin-row { position: absolute; left: 0; right: 0; transform: translateY(-50%); }
+.lb-skin-name, .lb-skin-score {
+  position: absolute; transform: translateX(-50%); white-space: nowrap;
+  font-weight: 800; color: #1c3f6e; font-size: clamp(0.65rem, 1.8vw, 1.05rem);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.55);
+}
+.lb-skin-score { font-variant-numeric: tabular-nums; }
+.lb-skin-row.lb-hi .lb-skin-name, .lb-skin-row.lb-hi .lb-skin-score {
+  color: #a8760c; text-shadow: 0 1px 3px rgba(255,255,255,0.7);
+}
+.lb-skin-back { min-width: 160px; }
 
 .lb-panel {
   position: relative; z-index: 1;

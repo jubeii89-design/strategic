@@ -201,8 +201,16 @@ assert(await page.locator(".name-prompt .name-input").count() === 1, "name promp
 await page.locator(".name-prompt .name-input").fill("TESTER");
 await page.locator(".name-prompt .mode-btn.primary").click();
 await page.waitForSelector(".leaderboard-screen");
-assert(await page.locator(".lb-signboard").count() === 1, "leaderboard renders as a signboard");
-assert(await page.locator(".lb-sign-svg-el").count() === 1, "wooden signpost SVG (two posts) is mounted");
+// A committed public/assets/leaderboard.* image switches the board to a
+// custom image-skinned overlay instead of the built-in wooden signboard.
+const lbUsesSkin = async () => (await page.locator(".lb-skin-board").count()) === 1;
+let usesSkin = await lbUsesSkin();
+if (usesSkin) {
+  assert(await page.locator(".lb-skin-board").count() === 1, "leaderboard renders as a custom image-skinned board");
+} else {
+  assert(await page.locator(".lb-signboard").count() === 1, "leaderboard renders as a signboard");
+  assert(await page.locator(".lb-sign-svg-el").count() === 1, "wooden signpost SVG (two posts) is mounted");
+}
 
 // --- Per-hand top-2-card history persisted to the "database" (localStorage) ---
 const handHistory = await page.evaluate(() => JSON.parse(localStorage.getItem("pokerst8ts.handHistory.v1") || "[]"));
@@ -212,10 +220,20 @@ assert(
   "each hand record has the submitted name and up to 2 top cards",
 );
 
-const lbNames = await page.locator(".lb-table .lb-name").allInnerTexts();
+const lbNames = usesSkin
+  ? await page.locator(".lb-skin-name").allInnerTexts()
+  : await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(lbNames.includes("TESTER"), `submitted score shows on the leaderboard: ${JSON.stringify(lbNames)}`);
-assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
-assert(roundCell === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+if (usesSkin) {
+  assert(await page.locator(".lb-skin-row.lb-hi").count() === 1, "the new entry is highlighted");
+  assert(
+    roundCell === (await page.locator(".lb-skin-row.lb-hi .lb-skin-score").innerText()),
+    "leaderboard score matches the round",
+  );
+} else {
+  assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
+  assert(roundCell === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+}
 // AI names never appear as leaderboard entries (human-only)
 for (const ai of ["Leonidas", "Ajax", "Helena", "Cyrus"]) {
   assert(!lbNames.includes(ai), `AI '${ai}' is NOT on the leaderboard`);
@@ -234,7 +252,10 @@ await page.reload({ waitUntil: "networkidle" });
 await page.waitForTimeout(950);
 await page.locator(".lb-link").click();
 await page.waitForSelector(".leaderboard-screen");
-const afterReload = await page.locator(".lb-table .lb-name").allInnerTexts();
+usesSkin = await lbUsesSkin();
+const afterReload = usesSkin
+  ? await page.locator(".lb-skin-name").allInnerTexts()
+  : await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(afterReload.includes("TESTER"), `score persists across reload: ${JSON.stringify(afterReload)}`);
 
 assert(errors.length === 0, `no page/console errors (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);
