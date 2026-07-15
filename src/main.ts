@@ -127,14 +127,20 @@ function showOverlay(build: (panel: HTMLElement) => void, next: () => void, wide
   overlay.addEventListener("click", advance);
 }
 
-/** The single completed hand with the most points, plus its top 2 cards. */
+/**
+ * The single completed hand with the best result, plus its top 2 cards.
+ * "Best" means highest points in PokerStr8ts but fewest strokes in Golf,
+ * matching the direction already used for AI decisions and standings.
+ */
 function bestHand(
   score: ReturnType<typeof scoreBoard>,
   completions: Match["human"]["state"]["handCompletions"],
+  mode: GameMode,
 ): { handName: string; points: number; topCards: number[] } | null {
   const complete = score.hands.filter((h) => h.complete);
   if (complete.length === 0) return null;
-  const top = complete.reduce((a, b) => (b.points > a.points ? b : a));
+  const golf = mode === GameMode.GolfMode;
+  const top = complete.reduce((a, b) => ((golf ? b.points < a.points : b.points > a.points) ? b : a));
   const rec = completions.find((c) => c.hole === top.hole);
   return { handName: top.handName, points: top.points, topCards: rec?.topCards ?? [] };
 }
@@ -146,7 +152,7 @@ function showEndPanel(match: Match): void {
   const total = match.ais.length + 1;
   const heading = rank === 1 ? "You win! 🏆" : `You placed ${ordinal(rank)} of ${total}`;
   const score = scoreBoard(match.human.state.snapshot().board, match.mode);
-  const best = bestHand(score, match.human.state.handCompletions);
+  const best = bestHand(score, match.human.state.handCompletions, match.mode);
 
   showOverlay((panel) => {
     const h2 = document.createElement("h2");
@@ -172,13 +178,14 @@ function showEndPanel(match: Match): void {
   }, () => showFinalStandings(match), true);
 }
 
-// Stage 2: everyone's scoring — the same grid, one row per player.
+// Stage 2: everyone's scoring — the same grid, one row per player, ranked
+// best to worst to match the "final standings" already announced.
 function showFinalStandings(match: Match): void {
-  const rows = [match.human, ...match.ais].map((p) => ({
-    name: p.name,
-    isHuman: p.isHuman,
-    board: p.state.snapshot().board,
-  }));
+  const players = [match.human, ...match.ais];
+  const rows = match.standings().map((s) => {
+    const p = players.find((pl) => pl.name === s.name)!;
+    return { name: p.name, isHuman: p.isHuman, board: p.state.snapshot().board };
+  });
 
   showOverlay((panel) => {
     const h2 = document.createElement("h2");
