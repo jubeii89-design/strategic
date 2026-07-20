@@ -223,6 +223,9 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 
 /* ---------- Scorecard ---------- */
 .scorecard-wrap { overflow-x: auto; width: 100%; }
+/* optional drop-in raster design (see public/assets/README.md) */
+.scorecard-wrap.has-bg { background-size: cover; background-position: center; border-radius: 8px; padding: 3px; }
+.scorecard-wrap.has-bg .scorecard { background: rgba(20,48,79,0.72); }
 .scorecard { border-collapse: collapse; margin: 0 auto; font-size: 0.72rem; background: rgba(20,48,79,0.6); border: 2px solid var(--gold); border-radius: 6px; }
 .scorecard th, .scorecard td { border: 1px solid rgba(200,162,74,0.35); padding: 2px 5px; text-align: center; min-width: 20px; }
 .scorecard th { background: #3a2417; color: var(--cream); font-size: 0.62rem; letter-spacing: 0.04em; }
@@ -233,26 +236,90 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 .scorecard .strong { color: var(--gold); font-weight: 900; }
 .scorecard .round { font-size: 0.85rem; }
 
+/* ---------- Multi-player scorecard (end-of-round "everyone's scoring") ---------- */
+.multi-scorecard { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%; }
+.ms-banner {
+  display: flex; align-items: center; gap: 0.6rem; justify-content: center;
+  background: var(--navy-deep); border: 2px solid var(--gold); border-radius: 8px;
+  padding: 0.35rem 1.2rem; font-family: Georgia, serif; font-weight: 900;
+  letter-spacing: 0.12em; color: var(--cream); text-shadow: 0 2px 0 rgba(0,0,0,0.4);
+}
+.ms-ball {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  background-image:
+    radial-gradient(circle at 30% 25%, #fff 0%, #e8e8e8 55%, #c8c8c8 100%),
+    repeating-radial-gradient(circle at 25% 30%, rgba(0,0,0,0.08) 0 1px, transparent 1px 3px);
+  box-shadow: inset -2px -2px 3px rgba(0,0,0,0.25), 2px 3px 0 rgba(0,0,0,0.15);
+}
+.ms-panel { width: 100%; background: rgba(10,28,50,0.55); border: 3px solid var(--gold); border-radius: 14px; padding: 0.8rem; }
+.ms-panel.has-bg { background-size: cover; background-position: center; }
+.ms-panel.has-bg .ms-table th { background: rgba(28,63,110,0.88); }
+.ms-panel.has-bg .ms-table td { background: rgba(10,28,50,0.4); }
+.ms-table-wrap { overflow-x: auto; width: 100%; }
+.ms-table { border-collapse: collapse; margin: 0 auto; font-size: 0.72rem; min-width: 100%; }
+.ms-table th, .ms-table td { border: 1px solid rgba(200,162,74,0.3); padding: 3px 6px; text-align: center; }
+.ms-table th { background: #1c3f6e; color: var(--cream); font-size: 0.62rem; letter-spacing: 0.04em; }
+.ms-name { text-align: left !important; font-weight: 700; min-width: 90px; }
+.ms-total { background: rgba(200,162,74,0.18); font-weight: 900; color: var(--gold); }
+.ms-table tr.ms-you td { background: rgba(200,162,74,0.16); }
+.ms-table tr.ms-you .ms-total { background: rgba(200,162,74,0.32); }
+
 /* ---------- Leaderboard ---------- */
 .lb-link { margin-top: 1.1rem; background: none; border: none; color: var(--cream); font-size: 0.95rem; letter-spacing: 0.06em; cursor: pointer; opacity: 0; animation: fade-in 900ms 860ms ease forwards; text-decoration: underline dotted var(--gold); text-underline-offset: 4px; }
 .lb-link:hover { color: var(--gold); }
 
 .leaderboard-screen { align-items: center; justify-content: center; padding: 2rem 1rem; }
-.lb-panel { width: min(560px, 94vw); background: rgba(20,48,79,0.9); border: 2px solid var(--gold); border-radius: 14px; padding: 1.4rem 1.4rem 1.2rem; }
-.lb-title { margin: 0 0 0.9rem; text-align: center; color: var(--gold); letter-spacing: 0.04em; }
+
+/* a golf-course "LEADERS" signpost: a single SVG wood post behind an arched
+   cream-and-olive board, matching a classic tournament leaderboard sign.
+   Used only when no custom public/assets/leaderboard.* image is present. */
+.lb-signboard { position: relative; width: min(600px, 96vw); margin: 0 auto; padding-bottom: 100px; }
+.lb-sign-svg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.lb-sign-svg-el { display: block; width: 100%; height: 100%; }
+
+/* Custom skin: real name/score data positioned onto the uploaded leaderboard
+   image's own row/column grid (see LB_SKIN_* constants in leaderboard.ts). */
+.lb-skin-wrap { width: min(560px, 96vw); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+.lb-skin-toggle { order: -1; }
+.lb-skin-board { position: relative; width: 100%; background-size: 100% 100%; background-position: center; border-radius: 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.5); }
+.lb-skin-row { position: absolute; left: 0; right: 0; transform: translateY(-50%); }
+.lb-skin-name, .lb-skin-score {
+  position: absolute; transform: translateX(-50%); white-space: nowrap;
+  font-weight: 800; color: #1c3f6e; font-size: clamp(0.65rem, 1.8vw, 1.05rem);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.55);
+}
+.lb-skin-score { font-variant-numeric: tabular-nums; }
+.lb-skin-row.lb-hi .lb-skin-name, .lb-skin-row.lb-hi .lb-skin-score {
+  color: #a8760c; text-shadow: 0 1px 3px rgba(255,255,255,0.7);
+}
+.lb-skin-back { min-width: 160px; }
+
+.lb-panel {
+  position: relative; z-index: 1;
+  width: min(560px, 92vw); margin: 0 auto;
+  background: linear-gradient(180deg, #f4ecd8, #ece0c2);
+  border: 5px solid #3f4d28; border-radius: 46px 46px 12px 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.3);
+  padding: 1.6rem 1.4rem 1.2rem;
+}
+.lb-title {
+  margin: 0 0 0.9rem; text-align: center; letter-spacing: 0.08em;
+  font-family: Georgia, serif; font-weight: 900; text-transform: uppercase;
+  color: #2a3418;
+}
 .lb-toggle { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.9rem; }
-.lb-toggle button { flex: 1; max-width: 180px; padding: 0.5rem 0.8rem; border-radius: 8px; border: 2px solid var(--gold); background: transparent; color: var(--cream); font-weight: 700; cursor: pointer; }
-.lb-toggle button.active { background: var(--gold); color: var(--navy-deep); }
+.lb-toggle button { flex: 1; max-width: 180px; padding: 0.5rem 0.8rem; border-radius: 8px; border: 2px solid #3f4d28; background: rgba(63,77,40,0.08); color: #2a3418; font-weight: 700; cursor: pointer; }
+.lb-toggle button.active { background: #3f4d28; color: #f4ecd8; }
 .lb-board { min-height: 120px; }
 .lb-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.lb-table th { text-align: left; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; padding: 0 6px 4px; }
-.lb-table td { padding: 4px 6px; border-top: 1px solid rgba(200,162,74,0.2); }
+.lb-table th { text-align: left; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; background: #3f4d28; color: #f4ecd8; padding: 4px 6px; }
+.lb-table td { padding: 4px 6px; border-top: 1px solid rgba(63,77,40,0.25); color: #2a3418; }
 .lb-rank { width: 2.2rem; text-align: center; }
 .lb-name { font-weight: 700; }
-.lb-score { color: var(--gold); font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
-.lb-date { text-align: right; opacity: 0.7; font-size: 0.78rem; white-space: nowrap; }
-.lb-table tr.lb-hi td { background: rgba(200,162,74,0.22); }
-.lb-empty { text-align: center; opacity: 0.75; padding: 1.4rem 0; font-style: italic; }
+.lb-score { color: #6b4f1d; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.lb-date { text-align: right; opacity: 0.75; font-size: 0.78rem; white-space: nowrap; color: #2a3418; }
+.lb-table tr.lb-hi td { background: rgba(63,77,40,0.18); }
+.lb-empty { text-align: center; opacity: 0.8; padding: 1.4rem 0; font-style: italic; color: #2a3418; }
 .lb-back { margin: 1rem auto 0; display: block; min-width: 160px; }
 
 /* name-entry modal */
@@ -263,9 +330,15 @@ body[data-bg="golf"] .play-area { background: rgba(10, 28, 18, 0.42); box-shadow
 /* ---------- End overlay ---------- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10; }
 .end-panel { background: var(--navy); border: 2px solid var(--gold); border-radius: 14px; padding: 1.6rem 2rem; text-align: center; display: flex; flex-direction: column; gap: 0.8rem; min-width: 260px; }
+.end-panel.wide { width: min(900px, 96vw); max-width: 96vw; }
 .end-panel h2 { margin: 0; color: var(--gold); }
 .end-panel .final { margin: 0 0 0.4rem; font-size: 1.05rem; }
 .end-panel .final strong { color: var(--gold); font-size: 1.4rem; }
+.final-score { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+.final-score-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+.final-score-value { font-size: 2.6rem; font-weight: 900; color: var(--gold); line-height: 1; }
+.final-stat { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+.final-stat strong { color: var(--gold); }
 .end-hint { margin: 0.2rem 0 0; font-size: 0.85rem; opacity: 0.7; animation: hint-pulse 1.6s ease-in-out infinite; }
 .play-again-prompt { min-width: 220px; }
 @keyframes hint-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.9; } }

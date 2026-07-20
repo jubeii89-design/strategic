@@ -30,6 +30,16 @@ The four sprite sheets from the original game need to be sliced into these 52
 individual PNGs (portrait, transparent or card-coloured background). Until then
 the SVG cards are shown.
 
+## Portal hero image (optional)
+
+`public/assets/portal.jpg` (or `.jpeg` / `.png`) — a full-bleed hero image for
+the marketing portal at `/`. If present, it replaces the crossfading
+golf-course/poker-table backdrop **and** the wordmark/tagline/feature-bullet
+text entirely — only the gold ENTER button stays on top — so a single
+finished banner image can be the whole landing page. If absent, the default
+animated look is shown. Checked once per page load and cached, so this has no
+added load cost on later visits.
+
 ## Course background (optional)
 
 `public/assets/course.jpg` (or `.png` / `.webp`) — a top-down golf-course
@@ -43,6 +53,16 @@ around 1600×900 or larger works best (it is cover-scaled).
 poker table image used as the PokerStr8ts mode background. If present it
 replaces the built-in SVG poker table; if absent, the SVG is shown. A landscape
 image around 1600×900 or larger works best (it is cover-scaled).
+
+## Scoreboard / leaderboard design (optional)
+
+`public/assets/scoreboard.jpg` (or `.jpeg` / `.png`) — replaces the scorecard's
+background (used both at the top of the game and on the end-of-round score
+screens) with your own image. `public/assets/leaderboard.jpg` (or `.jpeg` /
+`.png`) does the same for the leaderboard sign. Either is optional; a missing
+file leaves the built-in look in place. Checked once per page load and
+cached — later re-renders (which happen often during play) reuse the cached
+result instead of re-requesting the file, so there's no added load cost.
 
 ## Background music (optional)
 

@@ -45,17 +45,30 @@ page.on("console", (m) => {
 
 // --- Portal (marketing landing page) ---
 await page.goto(BASE, { waitUntil: "networkidle" });
-const portalPresents = await page.locator(".presents").innerText();
-assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
-const portalWordmark = await page.locator(".wordmark").innerText();
-assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
-assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
-// The repo ships a real public/assets/logo.png — assert it actually loaded via
-// the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
-// the check that would catch an asset-path regression; the generic no-console-
-// errors assertion below intentionally ignores art-probe 404s and would miss it.
-await page.waitForSelector(".crest-img", { timeout: 3000 });
-assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+// The repo may ship a custom public/assets/portal.(jpg|jpeg|png) hero image,
+// which replaces the text overlay entirely (see designOverrides/portal/main.ts)
+// — wait for that async probe to settle either way before asserting.
+await page.waitForFunction(
+  () => document.body.classList.contains("has-portal-bg") || document.readyState === "complete",
+  { timeout: 2000 },
+).catch(() => {});
+await page.waitForTimeout(300);
+const hasPortalBg = await page.evaluate(() => document.body.classList.contains("has-portal-bg"));
+if (hasPortalBg) {
+  assert(await page.locator(".portal-copy").isHidden(), "portal text overlay hidden when a custom hero image is active");
+} else {
+  const portalPresents = await page.locator(".presents").innerText();
+  assert(/strategictitans\.ca/i.test(portalPresents), `portal shows the site: "${portalPresents.replace(/\n/g, " ")}"`);
+  const portalWordmark = await page.locator(".wordmark").innerText();
+  assert(/PokerSt8ts/i.test(portalWordmark.replace(/\s/g, "")), `portal wordmark is PokerSt8ts: "${portalWordmark}"`);
+  assert(await page.locator(".portal-features li").count() >= 3, "portal shows feature bullets");
+  // The repo ships a real public/assets/logo.png — assert it actually loaded via
+  // the portal's ASSET_BASE (""), not just that the SVG fallback shows. This is
+  // the check that would catch an asset-path regression; the generic no-console-
+  // errors assertion below intentionally ignores art-probe 404s and would miss it.
+  await page.waitForSelector(".crest-img", { timeout: 3000 });
+  assert(await page.locator(".crest-img").count() === 1, "portal crest loads the real logo.png (root asset path resolves)");
+}
 const enterHref = await page.locator(".enter-btn").getAttribute("href");
 assert(/play\/?$/.test(enterHref ?? ""), `ENTER points at /play/: ${enterHref}`);
 // The repo now ships public/assets/music.mp3 — the mute button should appear
@@ -157,28 +170,70 @@ while (guard++ < 60) {
 }
 assert(await page.locator(".overlay").count() > 0, "end panel appears when the round completes");
 assert(await page.locator(".board .card:not(.card-empty)").count() === 36, "all 36 cells filled at completion");
-assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the end panel");
 assert(await page.locator(".score-box").count() === 0, "strokes/score box removed from the rail");
 
-// --- Final standings, centered on screen, rank all 4 players ---
-const finalRows = await page.locator(".standings.final .standing-row").count();
-assert(finalRows === 4, `final standings rank all players (got ${finalRows})`);
-const roundCell = await page.locator(".scorecard .round").innerText();
-const youPts = await page.locator(".standings.final .standing-row.you .pts").innerText();
-assert(youPts === roundCell, `human final score (${youPts}) matches scorecard ROUND (${roundCell})`);
+// --- Stage 1: your own scorecard (same grid shown during play), centered on screen ---
+assert(await page.locator(".overlay .end-panel.wide").count() === 1, "stage 1 panel is the wide variant");
+assert(await page.locator(".end-hint").count() === 1, "press-any-key hint shown on the personal scorecard panel");
+const roundCell = await page.locator(".screen.game .scorecard .round").innerText();
+const overlayRound = await page.locator(".overlay .scorecard .round").innerText();
+assert(overlayRound === roundCell, `personal scorecard round (${overlayRound}) matches the in-game scorecard (${roundCell})`);
+assert(await page.locator(".final-stat").count() === 1, "best-hand stat shown alongside the personal scorecard");
+await page.screenshot({ path: `${OUT}/smoke-stats.png` });
+
+// --- Press any key → Stage 2: everyone's scoring grid, centered on screen ---
+await page.keyboard.press("Enter");
+await page.waitForSelector(".multi-scorecard");
+assert(
+  (await page.locator(".overlay .end-panel h2").innerText()) === "Final Standings",
+  "stage 2 heading is Final Standings",
+);
+const msRows = await page.locator(".ms-table tr").count(); // header + 4 players
+assert(msRows === 5, `everyone's-scoring grid has header + 4 player rows (got ${msRows})`);
+const youTotal = await page.locator(".ms-table tr.ms-you .ms-total").innerText();
+assert(youTotal === roundCell, `human total in the multi-scorecard (${youTotal}) matches the round (${roundCell})`);
 await page.screenshot({ path: `${OUT}/smoke-complete.png`, fullPage: true });
 
-// --- Press any key to continue → qualifying finish → name prompt → submit ---
+// --- Press any key → qualifying finish → name prompt → submit ---
 await page.keyboard.press("Enter");
 await page.waitForSelector(".name-prompt");
 assert(await page.locator(".name-prompt .name-input").count() === 1, "name prompt appears on a qualifying finish");
 await page.locator(".name-prompt .name-input").fill("TESTER");
 await page.locator(".name-prompt .mode-btn.primary").click();
 await page.waitForSelector(".leaderboard-screen");
-const lbNames = await page.locator(".lb-table .lb-name").allInnerTexts();
+// A committed public/assets/leaderboard.* image switches the board to a
+// custom image-skinned overlay instead of the built-in wooden signboard.
+const lbUsesSkin = async () => (await page.locator(".lb-skin-board").count()) === 1;
+let usesSkin = await lbUsesSkin();
+if (usesSkin) {
+  assert(await page.locator(".lb-skin-board").count() === 1, "leaderboard renders as a custom image-skinned board");
+} else {
+  assert(await page.locator(".lb-signboard").count() === 1, "leaderboard renders as a signboard");
+  assert(await page.locator(".lb-sign-svg-el").count() === 1, "wooden signpost SVG (two posts) is mounted");
+}
+
+// --- Per-hand top-2-card history persisted to the "database" (localStorage) ---
+const handHistory = await page.evaluate(() => JSON.parse(localStorage.getItem("pokerst8ts.handHistory.v1") || "[]"));
+assert(handHistory.length === 18, `all 18 completed hands recorded (got ${handHistory.length})`);
+assert(
+  handHistory.every((h) => h.playerName === "TESTER" && Array.isArray(h.topCards) && h.topCards.length <= 2),
+  "each hand record has the submitted name and up to 2 top cards",
+);
+
+const lbNames = usesSkin
+  ? await page.locator(".lb-skin-name").allInnerTexts()
+  : await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(lbNames.includes("TESTER"), `submitted score shows on the leaderboard: ${JSON.stringify(lbNames)}`);
-assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
-assert(youPts === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+if (usesSkin) {
+  assert(await page.locator(".lb-skin-row.lb-hi").count() === 1, "the new entry is highlighted");
+  assert(
+    roundCell === (await page.locator(".lb-skin-row.lb-hi .lb-skin-score").innerText()),
+    "leaderboard score matches the round",
+  );
+} else {
+  assert(await page.locator(".lb-table tr.lb-hi").count() === 1, "the new entry is highlighted");
+  assert(roundCell === (await page.locator(".lb-table tr.lb-hi .lb-score").innerText()), "leaderboard score matches the round");
+}
 // AI names never appear as leaderboard entries (human-only)
 for (const ai of ["Leonidas", "Ajax", "Helena", "Cyrus"]) {
   assert(!lbNames.includes(ai), `AI '${ai}' is NOT on the leaderboard`);
@@ -197,7 +252,10 @@ await page.reload({ waitUntil: "networkidle" });
 await page.waitForTimeout(950);
 await page.locator(".lb-link").click();
 await page.waitForSelector(".leaderboard-screen");
-const afterReload = await page.locator(".lb-table .lb-name").allInnerTexts();
+usesSkin = await lbUsesSkin();
+const afterReload = usesSkin
+  ? await page.locator(".lb-skin-name").allInnerTexts()
+  : await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(afterReload.includes("TESTER"), `score persists across reload: ${JSON.stringify(afterReload)}`);
 
 assert(errors.length === 0, `no page/console errors (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);

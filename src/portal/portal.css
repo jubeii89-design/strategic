@@ -1,3 +1,11 @@
+.portal-copy { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+
+/* optional drop-in hero image (public/assets/portal.jpg/.jpeg/.png) replaces
+   the crossfading golf/poker backdrop and text overlay entirely */
+.screen.portal { background-size: cover; background-position: center; }
+body.has-portal-bg .portal-copy { display: none; }
+body.has-portal-bg #bg, body.has-portal-bg #bg-poker { opacity: 0 !important; }
+
 .portal-tagline { max-width: 42ch; font-size: 1.05rem; }
 
 .portal-features {
