@@ -1,13 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GameMode } from "../src/engine/index.js";
 import {
   type LeaderboardEntry,
+  type LeaderboardStore,
   type StorageLike,
   Leaderboard,
   LocalLeaderboardStore,
   MAX_ENTRIES,
   MemoryLeaderboardStore,
+  RemoteLeaderboardStore,
   cleanName,
+  detectLeaderboardStore,
   todayISO,
 } from "../src/game/leaderboard.js";
 
@@ -123,6 +126,108 @@ describe("LocalLeaderboardStore persistence", () => {
     const raw = JSON.parse(storage.data.get("pokerst8ts.leaderboard.v1")!);
     expect(raw).toHaveLength(1);
     expect(raw[0].name).toBe("You");
+  });
+});
+
+describe("RemoteLeaderboardStore (Windows local-server backend)", () => {
+  function stubFetch(impl: typeof fetch): () => void {
+    const original = globalThis.fetch;
+    globalThis.fetch = impl;
+    return () => {
+      globalThis.fetch = original;
+    };
+  }
+
+  it("loads sanitized entries from GET /api/leaderboard", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ entries: [entry("A", 210, poker)] }));
+    const restore = stubFetch(fetchMock as unknown as typeof fetch);
+    try {
+      const store = new RemoteLeaderboardStore();
+      const entries = await store.load();
+      expect(entries).toEqual([entry("A", 210, poker)]);
+      expect(fetchMock).toHaveBeenCalledWith("/api/leaderboard");
+    } finally {
+      restore();
+    }
+  });
+
+  it("throws on a non-OK load response", async () => {
+    const restore = stubFetch(vi.fn(async () => new Response("", { status: 500 })) as unknown as typeof fetch);
+    try {
+      await expect(new RemoteLeaderboardStore().load()).rejects.toThrow("LEADERBOARD_LOAD_FAILED");
+    } finally {
+      restore();
+    }
+  });
+
+  it("POSTs entries to save()", async () => {
+    const fetchMock = vi.fn(async () => new Response("", { status: 200 }));
+    const restore = stubFetch(fetchMock as unknown as typeof fetch);
+    try {
+      await new RemoteLeaderboardStore().save([entry("A", 1, poker)]);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/leaderboard",
+        expect.objectContaining({ method: "POST", body: JSON.stringify({ entries: [entry("A", 1, poker)] }) }),
+      );
+    } finally {
+      restore();
+    }
+  });
+
+  it("POSTs to /api/round-complete on recordRoundPlayed()", async () => {
+    const fetchMock = vi.fn(async () => new Response("", { status: 200 }));
+    const restore = stubFetch(fetchMock as unknown as typeof fetch);
+    try {
+      await new RemoteLeaderboardStore().recordRoundPlayed();
+      expect(fetchMock).toHaveBeenCalledWith("/api/round-complete", { method: "POST" });
+    } finally {
+      restore();
+    }
+  });
+});
+
+describe("detectLeaderboardStore", () => {
+  it("picks RemoteLeaderboardStore when /api/leaderboard answers with an entries array", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ entries: [] }));
+    const store = await detectLeaderboardStore(fetchMock as unknown as typeof fetch);
+    expect(store).toBeInstanceOf(RemoteLeaderboardStore);
+  });
+
+  it("falls back to LocalLeaderboardStore on a network error (no local-server backend)", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("network error");
+    });
+    const store = await detectLeaderboardStore(fetchMock as unknown as typeof fetch);
+    expect(store).toBeInstanceOf(LocalLeaderboardStore);
+  });
+
+  it("falls back to LocalLeaderboardStore on a non-OK response (e.g. static GitHub Pages 404)", async () => {
+    const fetchMock = vi.fn(async () => new Response("not found", { status: 404 }));
+    const store = await detectLeaderboardStore(fetchMock as unknown as typeof fetch);
+    expect(store).toBeInstanceOf(LocalLeaderboardStore);
+  });
+
+  it("falls back to LocalLeaderboardStore when the body has no entries array", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ unexpected: true }));
+    const store = await detectLeaderboardStore(fetchMock as unknown as typeof fetch);
+    expect(store).toBeInstanceOf(LocalLeaderboardStore);
+  });
+});
+
+describe("Leaderboard.recordRoundPlayed", () => {
+  it("calls through to a store that implements recordRoundPlayed", async () => {
+    const recordRoundPlayed = vi.fn(async () => {});
+    const store: LeaderboardStore = {
+      load: async () => [],
+      save: async () => {},
+      recordRoundPlayed,
+    };
+    await new Leaderboard(store).recordRoundPlayed();
+    expect(recordRoundPlayed).toHaveBeenCalledOnce();
+  });
+
+  it("is a no-op on a store without recordRoundPlayed (e.g. MemoryLeaderboardStore)", async () => {
+    await expect(new Leaderboard(new MemoryLeaderboardStore()).recordRoundPlayed()).resolves.toBeUndefined();
   });
 });
 

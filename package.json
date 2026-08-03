@@ -9,11 +9,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "package": "vite build && rm -f pokerst8ts-v1.0.0.zip && cd dist && zip -r ../pokerst8ts-v1.0.0.zip . && cd .. && echo 'Packaged: pokerst8ts-v1.0.0.zip'",
+    "package:windows": "vite build && rm -rf pokerst8ts-windows-v1.0.0 pokerst8ts-windows-v1.0.0.zip && mkdir -p pokerst8ts-windows-v1.0.0 && cp -r dist pokerst8ts-windows-v1.0.0/ && cp server/server.js server/package.json 'server/Play PokerSt8ts.bat' pokerst8ts-windows-v1.0.0/ && zip -r pokerst8ts-windows-v1.0.0.zip pokerst8ts-windows-v1.0.0 && echo 'Packaged: pokerst8ts-windows-v1.0.0.zip'",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
     "playwright-core": "^1.61.1",
     "tsx": "^4.23.0",
     "typescript": "^5.6.0",
