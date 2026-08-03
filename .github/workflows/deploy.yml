@@ -2,12 +2,16 @@ name: Deploy PokerSt8ts to GitHub Pages
 
 # Builds the static Vite app and publishes dist/ to GitHub Pages.
 # Runs on pushes to main (production) and on the initial port branch so the
-# site can go live before the PR is merged; also runnable on demand.
+# site can go live before the PR is merged; also runs typecheck/test/build
+# (no deploy) on pull requests targeting main, and is runnable on demand.
 on:
   push:
     branches:
       - main
       - claude/pokersstraights-solo-port-mf2g4u
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 # Permissions the Pages deploy action needs.

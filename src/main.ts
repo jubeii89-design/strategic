@@ -6,7 +6,7 @@
 
 import { type Cell, GameMode, scoreBoard } from "./engine/index.js";
 import { Match } from "./game/match.js";
-import { Leaderboard, LocalLeaderboardStore, cleanName, todayISO } from "./game/leaderboard.js";
+import { Leaderboard, detectLeaderboardStore, cleanName, todayISO } from "./game/leaderboard.js";
 import { HandHistory, LocalHandHistoryStore, type HandHistoryEntry } from "./game/handHistory.js";
 import { renderIntro } from "./ui/intro.js";
 import { renderBoard } from "./ui/board.js";
@@ -32,7 +32,10 @@ if (bgPoker) mountPokerTableBackground(bgPoker);
 mountBackgroundMusic(document.body);
 initDesignOverrides();
 
-const leaderboard = new Leaderboard(new LocalLeaderboardStore());
+// Probes for the Windows local-server backend (/api/leaderboard); falls
+// back to localStorage on the static web build where there is none. Assigned
+// by bootstrap() below before showIntro() first renders anything that reads it.
+let leaderboard: Leaderboard;
 const handHistory = new HandHistory(new LocalHandHistoryStore());
 
 function clear(): void {
@@ -226,6 +229,9 @@ async function continueAfterRound(match: Match): Promise<void> {
   void handHistory.appendMany(records);
 
   showLeaderboardWith(match.mode, highlight);
+  // Ticks the local-server's games-played counter (a no-op on localStorage);
+  // every round counts, whether or not it made the board.
+  void leaderboard.recordRoundPlayed();
   if (await promptPlayAgain()) showIntro();
 }
 
@@ -261,4 +267,8 @@ function showLeaderboard(mode: GameMode = GameMode.PokerStraightsMode): void {
   app.appendChild(renderLeaderboardScreen({ leaderboard, mode, onBack: showIntro }));
 }
 
-showIntro();
+async function bootstrap(): Promise<void> {
+  leaderboard = new Leaderboard(await detectLeaderboardStore());
+  showIntro();
+}
+void bootstrap();
