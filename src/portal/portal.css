@@ -2,7 +2,9 @@
 
 /* optional drop-in hero image (public/assets/portal.jpg/.jpeg/.png) replaces
    the crossfading golf/poker backdrop and text overlay entirely */
-.screen.portal { background-size: cover; background-position: center; }
+/* anchored to the top, not centered: the hero art's title/branding sits at
+   its top edge, and center-cropping was cutting it off on wide/short viewports */
+.screen.portal { background-size: cover; background-position: center top; }
 body.has-portal-bg .portal-copy { display: none; }
 body.has-portal-bg #bg, body.has-portal-bg #bg-poker { opacity: 0 !important; }
 
