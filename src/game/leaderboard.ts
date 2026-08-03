@@ -26,6 +26,13 @@ export interface LeaderboardEntry {
 export interface LeaderboardStore {
   load(): Promise<LeaderboardEntry[]>;
   save(entries: LeaderboardEntry[]): Promise<void>;
+  /**
+   * Optional: called once per completed round (regardless of whether it
+   * qualified for the board). Backends that wipe the board on a schedule
+   * (the Windows local-server build resets every 10 rounds) hook in here;
+   * stores with no such schedule can leave this unimplemented.
+   */
+  recordRoundPlayed?(): Promise<void>;
 }
 
 /** The subset of the Web Storage API we use (injectable for tests). */
@@ -87,19 +94,65 @@ export class MemoryLeaderboardStore implements LeaderboardStore {
 }
 
 /**
- * Stub for a future shared online board. Kept to document the seam — wire a
- * real endpoint (GET/POST /api/leaderboard) and this drops in unchanged.
+ * Talks to a same-origin backend (the Windows local-server build's
+ * `server/server.js`, or any future shared hosted board — same two routes
+ * either way). No backend at this origin (e.g. the static GitHub Pages
+ * build) means every call rejects; see `detectLeaderboardStore` below for
+ * the fallback-to-local probe callers should use instead of constructing
+ * this directly.
  */
 export class RemoteLeaderboardStore implements LeaderboardStore {
-  constructor(private readonly endpoint = "/api/leaderboard") {
-    void this.endpoint;
-  }
+  constructor(
+    private readonly endpoint = "/api/leaderboard",
+    private readonly roundEndpoint = "/api/round-complete",
+  ) {}
+
   async load(): Promise<LeaderboardEntry[]> {
-    throw new Error("NOT_CONFIGURED: RemoteLeaderboardStore has no backend yet");
+    const res = await fetch(this.endpoint);
+    if (!res.ok) throw new Error(`LEADERBOARD_LOAD_FAILED: ${res.status}`);
+    const body = await res.json();
+    return sanitize(body?.entries);
   }
-  async save(): Promise<void> {
-    throw new Error("NOT_CONFIGURED: RemoteLeaderboardStore has no backend yet");
+
+  async save(entries: LeaderboardEntry[]): Promise<void> {
+    const res = await fetch(this.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries }),
+    });
+    if (!res.ok) throw new Error(`LEADERBOARD_SAVE_FAILED: ${res.status}`);
   }
+
+  async recordRoundPlayed(): Promise<void> {
+    const res = await fetch(this.roundEndpoint, { method: "POST" });
+    if (!res.ok) throw new Error(`ROUND_RECORD_FAILED: ${res.status}`);
+  }
+}
+
+/**
+ * Probe once at startup for the local-server backend; fall back to
+ * `localStorage` when there isn't one (e.g. the static web build has no
+ * `/api/leaderboard` route to hit). A short timeout keeps a slow/absent
+ * route from stalling app start on the static build.
+ */
+export async function detectLeaderboardStore(
+  fetchImpl: typeof fetch = fetch,
+): Promise<LeaderboardStore> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 500);
+    const res = await fetchImpl("/api/leaderboard", { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const body = await res.json();
+      if (body && Array.isArray(body.entries)) {
+        return new RemoteLeaderboardStore();
+      }
+    }
+  } catch {
+    /* no local-server backend at this origin — use localStorage instead */
+  }
+  return new LocalLeaderboardStore();
 }
 
 /** Drop malformed rows so corrupt storage can never crash the app. */
@@ -181,6 +234,11 @@ export class Leaderboard {
       .sort((a, b) => compare(a, b, entry.mode));
     const idx = board.indexOf(entry);
     return idx === -1 ? { qualified: false, rank: null } : { qualified: true, rank: idx + 1 };
+  }
+
+  /** Tell the backend a round finished, win or lose. No-op on stores without a wipe schedule. */
+  async recordRoundPlayed(): Promise<void> {
+    await this.store.recordRoundPlayed?.();
   }
 }
 
