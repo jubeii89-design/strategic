@@ -3,51 +3,63 @@
  * once, start to finish, before the branded start page appears. No skip —
  * `onDone` fires only on the video's `ended` event.
  *
- * Autoplay-with-sound is blocked by browsers without a prior user gesture,
- * so playback starts muted (guaranteeing it actually plays end to end) with
- * an unmute toggle; if even muted autoplay is blocked, a "tap to play"
- * prompt appears instead.
+ * Browsers block autoplay-with-sound until the user has interacted with the
+ * page, so playback is gated behind a "Click to begin" tile: the click
+ * itself is the user gesture, and calling video.play() synchronously inside
+ * that click handler is what lets it play unmuted, in full, with sound.
  */
 import { ASSET_BASE } from "./assetBase.js";
+import { crest } from "./crest.js";
 
-export function renderIntroVideo(onDone: () => void): HTMLElement {
+export function renderIntroGate(onDone: () => void): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "intro-video";
+
+  const gate = document.createElement("button");
+  gate.className = "intro-gate";
+  gate.append(crest());
+  const prompt = document.createElement("p");
+  prompt.className = "intro-gate-prompt";
+  prompt.textContent = "Click to begin";
+  gate.appendChild(prompt);
 
   const video = document.createElement("video");
   video.className = "intro-video-el";
   video.src = `${ASSET_BASE}assets/intro_video.mp4`;
-  video.autoplay = true;
-  video.muted = true;
   video.playsInline = true;
+  video.hidden = true;
   video.addEventListener("ended", onDone, { once: true });
 
   const muteBtn = document.createElement("button");
   muteBtn.className = "mute-btn intro-video-mute";
+  muteBtn.hidden = true;
   const syncMute = () => {
     muteBtn.textContent = video.muted ? "🔇" : "🔊";
     muteBtn.setAttribute("aria-label", video.muted ? "Unmute video" : "Mute video");
   };
-  syncMute();
   muteBtn.addEventListener("click", () => {
     video.muted = !video.muted;
     syncMute();
   });
 
-  const tapPrompt = document.createElement("button");
-  tapPrompt.className = "intro-video-tap";
-  tapPrompt.textContent = "Tap to play";
-  tapPrompt.hidden = true;
-  const startOnGesture = () => {
-    tapPrompt.hidden = true;
-    void video.play();
-  };
-  tapPrompt.addEventListener("click", startOnGesture, { once: true });
+  gate.addEventListener(
+    "click",
+    () => {
+      gate.remove();
+      video.hidden = false;
+      muteBtn.hidden = false;
+      syncMute();
+      // Must be called synchronously within this handler to inherit the
+      // click's user-activation — an unmuted play() here is not blocked.
+      video.play().catch(() => {
+        // Extremely rare (e.g. media error, not an autoplay block); let the
+        // user retry with a tap directly on the video.
+        video.addEventListener("click", () => void video.play(), { once: true });
+      });
+    },
+    { once: true },
+  );
 
-  video.play().catch(() => {
-    tapPrompt.hidden = false;
-  });
-
-  wrap.append(video, muteBtn, tapPrompt);
+  wrap.append(gate, video, muteBtn);
   return wrap;
 }

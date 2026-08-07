@@ -9,7 +9,6 @@ import { Match } from "./game/match.js";
 import { Leaderboard, detectLeaderboardStore, cleanName, todayISO } from "./game/leaderboard.js";
 import { HandHistory, LocalHandHistoryStore, type HandHistoryEntry } from "./game/handHistory.js";
 import { renderIntro } from "./ui/intro.js";
-import { renderIntroVideo } from "./ui/introVideo.js";
 import { renderBoard } from "./ui/board.js";
 import { renderScorecard } from "./ui/scorecard.js";
 import { renderStandings } from "./ui/standings.js";
@@ -269,12 +268,7 @@ function showLeaderboard(mode: GameMode = GameMode.PokerStraightsMode): void {
 }
 
 async function bootstrap(): Promise<void> {
-  const storeReady = detectLeaderboardStore();
-  await new Promise<void>((resolve) => {
-    app.appendChild(renderIntroVideo(resolve));
-  });
-  clear();
-  leaderboard = new Leaderboard(await storeReady);
+  leaderboard = new Leaderboard(await detectLeaderboardStore());
   showIntro();
 }
 void bootstrap();
