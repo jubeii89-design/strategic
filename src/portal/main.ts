@@ -20,7 +20,6 @@ const bg = document.getElementById("bg");
 const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
-mountBackgroundMusic(document.body);
 document.body.dataset.bg = "portal";
 
 function renderPortal(): HTMLElement {
@@ -67,6 +66,7 @@ const portalScreen = renderPortal();
 const gate = renderIntroGate(() => {
   gate.remove();
   app.appendChild(portalScreen);
+  mountBackgroundMusic(document.body);
 });
 app.appendChild(gate);
 
