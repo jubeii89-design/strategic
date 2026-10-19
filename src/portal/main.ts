@@ -9,6 +9,7 @@ import { mountCourseBackground } from "../ui/courseBackground.js";
 import { mountPokerTableBackground } from "../ui/pokerTableBackground.js";
 import { crest } from "../ui/crest.js";
 import { mountBackgroundMusic } from "../ui/audio.js";
+import { renderIntroGate } from "../ui/introVideo.js";
 import "../ui/styles.css";
 import "./portal.css";
 
@@ -19,7 +20,6 @@ const bg = document.getElementById("bg");
 const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
-mountBackgroundMusic(document.body);
 document.body.dataset.bg = "portal";
 
 function renderPortal(): HTMLElement {
@@ -63,7 +63,12 @@ function renderPortal(): HTMLElement {
 }
 
 const portalScreen = renderPortal();
-app.appendChild(portalScreen);
+const gate = renderIntroGate(() => {
+  gate.remove();
+  app.appendChild(portalScreen);
+  mountBackgroundMusic(document.body);
+});
+app.appendChild(gate);
 
 // Optional custom hero image (public/assets/portal.jpg/.jpeg/.png) replaces
 // the golf-course/poker-table crossfade and the text overlay entirely —
