@@ -45,6 +45,27 @@ page.on("console", (m) => {
 
 // --- Portal (marketing landing page) ---
 await page.goto(BASE, { waitUntil: "networkidle" });
+
+// Root now shows a mandatory "Click to begin" intro-video gate before the
+// portal — the click is what lets the video play unmuted (browsers block
+// audible autoplay without a prior gesture). Click it, then wait for the
+// video to actually finish and hand off to the portal. Some sandboxed
+// Chromium builds (no H.264 decoder) can never finish real playback; as a
+// pragmatic fallback there, force the same 'ended' event a real finish
+// would fire so the rest of the suite can still run.
+await page.waitForSelector(".intro-gate", { timeout: 3000 });
+await page.locator(".intro-gate").click();
+await page
+  .waitForSelector(".portal-copy, .enter-btn", { timeout: 8000 })
+  .catch(async () => {
+    const video = page.locator(".intro-video-el");
+    if (await video.count() > 0) {
+      await video.evaluate((el) => el.dispatchEvent(new Event("ended")));
+    }
+  });
+await page.waitForSelector(".enter-btn", { timeout: 3000 });
+assert(await page.locator(".intro-gate").count() === 0, "intro-video gate closes after playback ends");
+
 // The repo may ship a custom public/assets/portal.(jpg|jpeg|png) hero image,
 // which replaces the text overlay entirely (see designOverrides/portal/main.ts)
 // — wait for that async probe to settle either way before asserting.
