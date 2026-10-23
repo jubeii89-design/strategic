@@ -6,3 +6,6 @@ bg-*.png
 smoke-*.png
 pokerst8ts-windows-*/
 server/leaderboard.json
+.cache/
+server/sea-config.json
+server/sea-prep.blob
