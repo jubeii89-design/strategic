@@ -11,9 +11,8 @@
  * - The game ends when the board's 36 cells are all full, or the draw pile /
  *   counter is exhausted — whichever comes first.
  *
- * This layer knows nothing about the DOM or the human player specifically: a
- * future AI can drive the same place()/pass() API on its own GameState, and
- * the engine scores the board without knowing who placed the cards.
+ * This layer knows nothing about the DOM or the player's identity: the
+ * engine scores the board without knowing who placed the cards.
  */
 
 import {

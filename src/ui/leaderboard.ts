@@ -215,10 +215,12 @@ export function renderLeaderboardScreen(opts: LeaderboardScreenOpts): HTMLElemen
 }
 
 /**
- * Modal asking for the player's name after a qualifying finish. Resolves with
- * the entered name, or null if skipped. Remembers the last name used.
+ * Modal asking for the player's name after a qualifying finish. Only ever
+ * shown when the score already qualifies for the top-20 board, so the
+ * heading is unconditional. Resolves with the entered name, or null if
+ * skipped. Remembers the last name used.
  */
-export function promptForName(rank: number): Promise<string | null> {
+export function promptForName(): Promise<string | null> {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className = "overlay";
@@ -226,7 +228,7 @@ export function promptForName(rank: number): Promise<string | null> {
     panel.className = "end-panel name-prompt";
 
     const h = document.createElement("h2");
-    h.textContent = rank === 1 ? "New high score! 🏆" : `Top ${rank <= 3 ? rank : 20} finish!`;
+    h.textContent = "New high score! 🏆";
     const p = document.createElement("p");
     p.textContent = "Enter your name for the leaderboard:";
 
