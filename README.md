@@ -49,16 +49,14 @@ dropped into `public/assets/` (see `public/assets/README.md`).
 - `src/engine/scoring.ts` — phase-3 pure implementation (default)
 - `src/engine/index.ts` — public API: `evaluateHand(cards, mode)`, `scoreBoard(board, mode)`
 - `src/game/gameState.ts` — solo game loop (deck draw, 6 auto-placed, place/pass, end detection);
-  no DOM, no player identity, so the AI drives the same API on its own state
-- `src/game/ai.ts` — greedy AI placement/pass policy; `src/game/match.ts` — human + 1–8 AI in
-  lockstep, session-only AI scores
-- `src/game/leaderboard.ts` — persistent, human-only leaderboard behind a `LeaderboardStore`
-  interface (`localStorage` now, `RemoteLeaderboardStore` seam for a shared DB later)
-- `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `standings`, `intro`,
-  `leaderboard`, `courseBackground`, `pokerTableBackground`, `crest` (shared logo, used by both the
-  portal and the intro), `assetBase` (resolves the optional-art probe paths correctly regardless of
-  which page — `/` or `/play/` — is loaded); `src/main.ts` wires intro → match → end panel →
-  leaderboard; `src/ui/styles.css`
+  no DOM, no player identity
+- `src/game/leaderboard.ts` — persistent leaderboard behind a `LeaderboardStore` interface
+  (`localStorage` now, `RemoteLeaderboardStore` seam for a shared DB later)
+- `src/ui/` — framework-free renderers: `cards`, `board`, `scorecard`, `intro`, `leaderboard`,
+  `courseBackground`, `pokerTableBackground`, `crest` (shared logo, used by both the portal and the
+  intro), `assetBase` (resolves the optional-art probe paths correctly regardless of which page —
+  `/` or `/play/` — is loaded); `src/main.ts` wires intro → round → end panel → leaderboard;
+  `src/ui/styles.css`
 - `src/portal/` — the marketing portal at site root (`main.ts`, `portal.css`); links to `/play/`
   via the gold ENTER button
 - `tests/` — parity fixture, screenshot-board oracle, equivalence suite, game-state tests
@@ -68,14 +66,11 @@ dropped into `public/assets/` (see `public/assets/README.md`).
   `/api/round-complete`), `Play PokerSt8ts.bat` launcher, packaged via `npm run package:windows`
 
 The engine scores any `BoardState` without knowing who placed the cards, and the game-state layer
-imports only the engine (no UI), so the multi-player mode (human + 1–8 AI on independent boards)
-and the leaderboard attach without touching either.
+imports only the engine (no UI), so the leaderboard attaches without touching either.
 
 ## Leaderboard
 
-Persistent and **human-only** — AI scores are session-only and never written, an invariant that is
-structural (`src/game/leaderboard.ts` has no concept of an AI, and `main.ts` only ever submits the
-human's round). Separate top-20 boards for PokerStr8ts (high) and Golf (low). Storage sits behind
+Persistent — nothing else ever writes to it. Separate top-20 boards for PokerStr8ts (high) and Golf (low). Storage sits behind
 an async `LeaderboardStore`: `LocalLeaderboardStore` (per-browser `localStorage`, ships with the
 static build) today, with a `RemoteLeaderboardStore` that talks to a real `GET`/`POST
 /api/leaderboard` backend — used by the Windows local-server build below, or a future shared hosted
@@ -145,11 +140,10 @@ build** of the game that could lock a hand's score before its last card arrived 
 two reference screenshots even use different scoreboard layouts). Per-hand scoring
 parity is unaffected — every ID→points pair on both scorecards matches the engine.
 
-Rule for the future game-loop, per the current assembly: `CheckIfHandIsComplete`
+Rule for the game-loop, per the current assembly: `CheckIfHandIsComplete`
 sets `handCompletedAnimationCompleted = true` **as a side effect of the check**, so a
 hand is scored exactly once, at the moment its last cell fills. Pure board-state
-scoring stays placement-order independent, as required for the future multi-player
-mode.
+scoring stays placement-order independent.
 
 ## Commands
 
