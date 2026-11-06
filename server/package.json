@@ -1,5 +1,4 @@
 {
   "name": "pokerst8ts-local-server",
-  "private": true,
-  "type": "module"
+  "private": true
 }

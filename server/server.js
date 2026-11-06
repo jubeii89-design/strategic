@@ -1,5 +1,5 @@
 /**
- * Zero-dependency local server for the Windows USB build.
+ * Zero-dependency local server for the Windows build.
  *
  * Serves the built site (./dist, copied in alongside this file at package
  * time) and backs the leaderboard with a local JSON file instead of browser
@@ -7,17 +7,27 @@
  * install step. Every completed round ticks a games-played counter; on the
  * 10th round the board wipes itself clean and the counter resets, per the
  * house rule that a round is always shown, whether or not it makes the board.
+ *
+ * CommonJS (not ESM) on purpose: this same file is also the entry point for
+ * the standalone `.exe` build (Node's Single Executable Application feature),
+ * where there is no real on-disk path for the running code, so
+ * import.meta.url-based path resolution doesn't work. __dirname/require
+ * sidestep that entirely, and `node:sea` is used below to detect the packaged
+ * case and resolve paths relative to the .exe itself instead.
  */
-import { createServer } from "node:http";
-import { exec } from "node:child_process";
-import { readFile, writeFile, rename } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+const { createServer } = require("node:http");
+const { exec } = require("node:child_process");
+const { readFile, writeFile, rename } = require("node:fs/promises");
+const path = require("node:path");
+const sea = require("node:sea");
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Packaged as a standalone .exe: resolve next to the executable itself.
+// Run as a plain script (dev, tests, the lite Node-required build): resolve
+// next to this file, same as before.
+const baseDir = sea.isSea() ? path.dirname(process.execPath) : __dirname;
 // Overridable for tests; the packaged build always uses the defaults.
-const DIST_DIR = process.env.POKERST8TS_DIST_DIR || path.join(__dirname, "dist");
-const DATA_FILE = process.env.POKERST8TS_DATA_FILE || path.join(__dirname, "leaderboard.json");
+const DIST_DIR = process.env.POKERST8TS_DIST_DIR || path.join(baseDir, "dist");
+const DATA_FILE = process.env.POKERST8TS_DATA_FILE || path.join(baseDir, "leaderboard.json");
 const PORT = process.env.PORT !== undefined ? Number(process.env.PORT) : 5330;
 const ROUNDS_BEFORE_WIPE = 10;
 
