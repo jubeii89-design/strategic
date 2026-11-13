@@ -30,21 +30,23 @@
   margin: 0;
 }
 
-.promo-btn {
-  display: inline-block;
-  background: linear-gradient(180deg, #b98f3d, var(--gold, #c8a24a));
-  color: var(--navy-deep, #0d2038);
-  border: none;
-  border-radius: 10px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  padding: 0.7rem 1.4rem;
-  text-decoration: none;
-  box-shadow: 0 3px 0 #8a6a26;
+.promo-video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
 }
 
-.promo-btn:hover {
-  filter: brightness(1.05);
+.promo-video {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  background: #000;
+}
+
+.promo-video-mute {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
 .demo-end-actions {

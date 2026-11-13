@@ -29,8 +29,13 @@ function candidates(): string[] {
   return [`${ASSET_BASE}assets/music.mp3`, `${ASSET_BASE}assets/music.ogg`];
 }
 
-/** Mount a looping background track + mute button into `target`, if a track is present. */
-export function mountBackgroundMusic(target: HTMLElement): void {
+/**
+ * Mount a looping background track + mute button into `target`, if a track
+ * is present. Returns the underlying `<audio>` element so a caller can duck
+ * it (e.g. `.pause()`) around a moment with its own audio, such as a video;
+ * existing callers that ignore the return value are unaffected.
+ */
+export function mountBackgroundMusic(target: HTMLElement): HTMLAudioElement {
   const urls = candidates();
   const audio = new Audio();
   audio.preload = "auto";
@@ -46,6 +51,7 @@ export function mountBackgroundMusic(target: HTMLElement): void {
   });
   audio.addEventListener("canplaythrough", () => startPlayer(audio, target), { once: true });
   tryNext();
+  return audio;
 }
 
 function startPlayer(audio: HTMLAudioElement, target: HTMLElement): void {

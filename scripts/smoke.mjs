@@ -283,8 +283,12 @@ while (demoGuard++ < 30) {
 assert(await page.locator(".overlay").count() > 0, "demo end panel appears when the mini-round completes");
 assert(await page.locator(".board .card:not(.card-empty)").count() === 9, "all 9 demo cells filled at completion");
 assert((await page.locator(".overlay h2").innerText()) === "Demo Complete", "demo end panel heading is Demo Complete");
-const promoHref = await page.locator(".promo-cta a.promo-btn").getAttribute("href");
-assert(promoHref === "https://www.strategictitans.ca", `demo promo link points at strategictitans.ca: ${promoHref}`);
+const promoVideoSrc = await page.locator(".promo-video").getAttribute("src");
+assert(/demo_promo\.mp4$/.test(promoVideoSrc ?? ""), `demo end panel plays the promo video: ${promoVideoSrc}`);
+// The actual auto-redirect-to-strategictitans.ca-on-ended behavior is left
+// unexercised here deliberately — forcing a real top-level navigation to a
+// live external domain from an automated run is slow and flaky; it's
+// verified by hand instead.
 assert(await page.locator(".name-prompt").count() === 0, "demo never shows the name-entry prompt");
 assert(await page.locator(".leaderboard-screen").count() === 0, "demo never shows the leaderboard screen");
 const leaderboardAfterDemo = await page.evaluate(() => localStorage.getItem("pokerst8ts.leaderboard.v1"));

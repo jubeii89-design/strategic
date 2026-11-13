@@ -16,7 +16,7 @@ import { cardFace, cardLabel } from "../ui/cards.js";
 import { mountCourseBackground } from "../ui/courseBackground.js";
 import { mountPokerTableBackground } from "../ui/pokerTableBackground.js";
 import { mountBackgroundMusic } from "../ui/audio.js";
-import { setAssetBase } from "../ui/assetBase.js";
+import { ASSET_BASE, setAssetBase } from "../ui/assetBase.js";
 import { initDesignOverrides } from "../ui/designOverrides.js";
 import "../ui/styles.css";
 import "./demo.css";
@@ -28,7 +28,7 @@ const bg = document.getElementById("bg");
 const bgPoker = document.getElementById("bg-poker");
 if (bg) mountCourseBackground(bg);
 if (bgPoker) mountPokerTableBackground(bgPoker);
-mountBackgroundMusic(document.body);
+const bgMusic = mountBackgroundMusic(document.body);
 initDesignOverrides();
 
 function clear(): void {
@@ -111,9 +111,11 @@ function bestHand(
   return { handName: top.handName, points: top.points, topCards: rec?.topCards ?? [] };
 }
 
-// A static panel with two explicit buttons — not `main.ts`'s click-or-key
-// dismiss overlay, since the promo link opens in a new tab and shouldn't
-// also silently restart the demo in this one.
+const PROMO_URL = "https://www.strategictitans.ca";
+
+// A static panel with explicit controls — not `main.ts`'s click-or-key
+// dismiss overlay, since the promo video auto-advances on its own and a
+// stray click shouldn't also restart the demo underneath it.
 function showEndPanel(game: DemoGameState): void {
   const score = scoreDemoBoard(game.snapshot().board, game.mode);
   const best = bestHand(score, game.handCompletions, game.mode);
@@ -139,18 +141,54 @@ function showEndPanel(game: DemoGameState): void {
     panel.appendChild(stat);
   }
 
+  // Duck the background music for the promo video's own audio; resumed only
+  // if the player comes back via "Play Demo Again" below.
+  bgMusic.pause();
+
   const promo = document.createElement("div");
   promo.className = "promo-cta";
   const promoText = document.createElement("p");
-  promoText.textContent = "Liked this taste? The full game has two grids, 18 hands, and a live leaderboard.";
-  const promoLink = document.createElement("a");
-  promoLink.className = "promo-btn";
-  promoLink.href = "https://www.strategictitans.ca";
-  promoLink.target = "_blank";
-  promoLink.rel = "noopener";
-  promoLink.textContent = "Get the Full Game →";
-  promo.append(promoText, promoLink);
+  promoText.textContent = "Liked this taste? Here's the full game:";
+  promo.appendChild(promoText);
+
+  const videoWrap = document.createElement("div");
+  videoWrap.className = "promo-video-wrap";
+  const video = document.createElement("video");
+  video.className = "promo-video";
+  video.src = `${ASSET_BASE}assets/demo_promo.mp4`;
+  video.playsInline = true;
+  video.addEventListener("ended", () => {
+    window.location.href = PROMO_URL;
+  });
+
+  videoWrap.append(video);
+  promo.appendChild(videoWrap);
   panel.appendChild(promo);
+
+  // Already inside the click handler that just ended the round, so this
+  // inherits that user gesture — unmuted autoplay isn't blocked. Fall back
+  // to muted autoplay (with a visible unmute toggle, added to the DOM only
+  // now — not pre-built-and-hidden, since the shared `.mute-btn` class's own
+  // `display` rule would otherwise override the `hidden` attribute) on the
+  // rare browser that still blocks it.
+  video.play().catch(() => {
+    video.muted = true;
+    const muteBtn = document.createElement("button");
+    muteBtn.className = "mute-btn promo-video-mute";
+    const syncMute = () => {
+      muteBtn.textContent = video.muted ? "🔇" : "🔊";
+      muteBtn.setAttribute("aria-label", video.muted ? "Unmute video" : "Mute video");
+    };
+    muteBtn.addEventListener("click", () => {
+      video.muted = !video.muted;
+      syncMute();
+    });
+    syncMute();
+    videoWrap.appendChild(muteBtn);
+    void video.play().catch(() => {
+      /* even muted autoplay blocked; the player can still press play directly */
+    });
+  });
 
   const actions = document.createElement("div");
   actions.className = "demo-end-actions";
@@ -158,6 +196,8 @@ function showEndPanel(game: DemoGameState): void {
   again.className = "mode-btn primary";
   again.innerHTML = `<span class="mode-label">Play Demo Again</span>`;
   again.addEventListener("click", () => {
+    video.pause();
+    if (!bgMusic.muted) void bgMusic.play().catch(() => {});
     overlay.remove();
     showIntro();
   });
