@@ -1,0 +1,56 @@
+/* Demo-only additions, layered on top of the unmodified ../ui/styles.css. */
+
+.demo-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--red, #b3362c);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.promo-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 2px solid var(--gold, #c8a24a);
+  border-radius: 10px;
+  background: rgba(200, 162, 74, 0.12);
+  text-align: center;
+}
+
+.promo-cta p {
+  margin: 0;
+}
+
+.promo-btn {
+  display: inline-block;
+  background: linear-gradient(180deg, #b98f3d, var(--gold, #c8a24a));
+  color: var(--navy-deep, #0d2038);
+  border: none;
+  border-radius: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 0.7rem 1.4rem;
+  text-decoration: none;
+  box-shadow: 0 3px 0 #8a6a26;
+}
+
+.promo-btn:hover {
+  filter: brightness(1.05);
+}
+
+.demo-end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
