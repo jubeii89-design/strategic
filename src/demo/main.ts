@@ -148,7 +148,7 @@ function showEndPanel(game: DemoGameState): void {
   const promo = document.createElement("div");
   promo.className = "promo-cta";
   const promoText = document.createElement("p");
-  promoText.textContent = "Liked this taste? Here's the full game:";
+  promoText.textContent = "Buy the Full Version";
   promo.appendChild(promoText);
 
   const videoWrap = document.createElement("div");
