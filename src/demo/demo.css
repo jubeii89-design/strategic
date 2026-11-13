@@ -1,0 +1,62 @@
+/* Demo-only additions, layered on top of the unmodified ../ui/styles.css. */
+
+.demo-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--red, #b3362c);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.promo-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 2px solid var(--gold, #c8a24a);
+  border-radius: 10px;
+  background: rgba(200, 162, 74, 0.12);
+  text-align: center;
+}
+
+.promo-cta p {
+  margin: 0;
+  color: var(--gold, #c8a24a);
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.promo-video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
+.promo-video {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  background: #000;
+}
+
+.promo-video-mute {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.demo-end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}

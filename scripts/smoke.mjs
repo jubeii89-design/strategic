@@ -255,7 +255,51 @@ const afterReload = usesSkin
   : await page.locator(".lb-table .lb-name").allInnerTexts();
 assert(afterReload.includes("TESTER"), `score persists across reload: ${JSON.stringify(afterReload)}`);
 
-assert(errors.length === 0, `no page/console errors (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);
+// --- /demo/: the standalone limited demo, separate from the real game above ---
+// Reuses the same `errors` collector (pageerror + console-error listeners,
+// registered above) — asserted once at the very end, covering both flows.
+const leaderboardBeforeDemo = await page.evaluate(() => localStorage.getItem("pokerst8ts.leaderboard.v1"));
+await page.goto(`${BASE}/demo/`, { waitUntil: "networkidle" });
+await page.waitForSelector(".demo-badge", { timeout: 3000 });
+assert(await page.locator(".demo-badge").innerText() === "DEMO", "demo intro shows a DEMO badge");
+assert(await page.locator(".mode-select .mode-btn").count() === 2, "demo intro offers both modes");
+
+await page.locator(".mode-btn.primary").click();
+await page.waitForSelector(".board");
+assert(await page.locator(".grid").count() === 1, "demo renders exactly one grid, not two");
+const demoPreplaced = await page.locator(".board .card:not(.card-empty)").count();
+assert(demoPreplaced === 2, `demo preplaces 2 cards (got ${demoPreplaced})`);
+const demoRemainStart = await page.locator(".remain-value").innerText();
+assert(demoRemainStart === "10", `demo cards remaining starts at 10 (got ${demoRemainStart})`);
+
+let demoGuard = 0;
+while (demoGuard++ < 30) {
+  if (await page.locator(".overlay").count() > 0) break;
+  const placeable = page.locator(".card-empty.placeable").first();
+  if (await placeable.count() > 0) await placeable.click();
+  else await page.locator(".pass-btn").click();
+  await page.waitForTimeout(15);
+}
+assert(await page.locator(".overlay").count() > 0, "demo end panel appears when the mini-round completes");
+assert(await page.locator(".board .card:not(.card-empty)").count() === 9, "all 9 demo cells filled at completion");
+assert((await page.locator(".overlay h2").innerText()) === "Demo Complete", "demo end panel heading is Demo Complete");
+const promoVideoSrc = await page.locator(".promo-video").getAttribute("src");
+assert(/demo_promo\.mp4$/.test(promoVideoSrc ?? ""), `demo end panel plays the promo video: ${promoVideoSrc}`);
+// The actual auto-redirect-to-strategictitans.ca-on-ended behavior is left
+// unexercised here deliberately — forcing a real top-level navigation to a
+// live external domain from an automated run is slow and flaky; it's
+// verified by hand instead.
+assert(await page.locator(".name-prompt").count() === 0, "demo never shows the name-entry prompt");
+assert(await page.locator(".leaderboard-screen").count() === 0, "demo never shows the leaderboard screen");
+const leaderboardAfterDemo = await page.evaluate(() => localStorage.getItem("pokerst8ts.leaderboard.v1"));
+assert(leaderboardAfterDemo === leaderboardBeforeDemo, "demo never writes to the real persistent leaderboard");
+await page.screenshot({ path: `${OUT}/smoke-demo-complete.png` });
+
+await page.locator(".demo-end-actions .mode-btn").click(); // Play Demo Again
+await page.waitForSelector(".demo-badge", { timeout: 3000 });
+assert(await page.locator(".overlay").count() === 0, "Play Demo Again returns to the demo intro");
+
+assert(errors.length === 0, `no page/console errors across the whole run (${errors.length}): ${errors.slice(0, 3).join(" | ")}`);
 
 await browser.close();
 console.log("\nSMOKE TEST PASSED");

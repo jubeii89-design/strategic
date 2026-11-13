@@ -17,12 +17,25 @@ npm test           # engine + game-state unit tests
 npm run typecheck
 ```
 
-The site is a two-page Vite build: **`/`** is a marketing portal (branding, tagline, gold ENTER
-button) and **`/play/`** is the game itself. Playable slice: branded intro
-(`www.strategictitans.ca Presents → PokerSt8ts`) → mode select → two 4×5 grids with the original's
-cut corners, next-card rail, PASS button, cards-remaining counter, and a live 18-hole scorecard →
-round-complete panel. Cards and the crest render as CSS/SVG and **auto-swap to real PNGs** when
-dropped into `public/assets/` (see `public/assets/README.md`).
+The site is a three-page Vite build: **`/`** is a marketing portal (branding, tagline, gold ENTER
+button), **`/play/`** is the full game, and **`/demo/`** is a free limited demo (see below).
+Playable slice: branded intro (`www.strategictitans.ca Presents → PokerSt8ts`) → mode select →
+two 4×5 grids with the original's cut corners, next-card rail, PASS button, cards-remaining
+counter, and a live 18-hole scorecard → round-complete panel. Cards and the crest render as
+CSS/SVG and **auto-swap to real PNGs** when dropped into `public/assets/` (see
+`public/assets/README.md`).
+
+### Demo build
+
+**`/demo/`** is a standalone, separate taste of the game for promotional use — a 6-hole mini board
+(3×3, no cut corners) instead of the full two-grid 18-hole round. It has no leaderboard and never
+reads or writes the real persistent one; finishing a demo round shows a "Demo Complete" panel with
+a promo link to [strategictitans.ca](https://www.strategictitans.ca) to get the full game. It's
+implemented as a wholly separate `src/demo/` module tree (its own small game loop, board, and
+scorecard sized to 6 holes) that reuses only pure, stateless pieces of the real game (card
+rendering, the crest, background mounts, the shared stylesheet) — the full game's own files
+(`src/game/gameState.ts`, `src/ui/board.ts`, `src/ui/scorecard.ts`, `src/ui/intro.ts`,
+`src/main.ts`) are untouched.
 
 ## Status
 
@@ -59,7 +72,11 @@ dropped into `public/assets/` (see `public/assets/README.md`).
   `src/ui/styles.css`
 - `src/portal/` — the marketing portal at site root (`main.ts`, `portal.css`); links to `/play/`
   via the gold ENTER button
+- `src/demo/` — the standalone 6-hole demo at `/demo/`: its own `demoGameState.ts` (3×3 topology),
+  `demoBoard.ts`, `demoScorecard.ts`, `demoIntro.ts`, `demo.css`, and `main.ts`; ends in a promo
+  link to strategictitans.ca instead of the leaderboard
 - `tests/` — parity fixture, screenshot-board oracle, equivalence suite, game-state tests
+  (including the demo's own `demoGameState.test.ts`)
 - `scripts/smoke.mjs` — headless Chromium end-to-end check (`npm run smoke` against a running
   `preview`)
 - `server/` — the Windows local-server build: `server.js` (static files + `/api/leaderboard`,
